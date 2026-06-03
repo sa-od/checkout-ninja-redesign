@@ -76,11 +76,7 @@ export default function Index() {
             Stay Updated
           </Text>
           <Card padding="0">
-            <Tabs
-              tabs={TABS}
-              selected={selectedTab}
-              onSelect={handleTabChange}
-            >
+            <Tabs tabs={TABS} selected={selectedTab} onSelect={handleTabChange}>
               <Box padding="400">
                 <BlockStack gap="400">
                   {/* 3-column template grid */}
@@ -177,9 +173,9 @@ export default function Index() {
 
                   {/* View all link */}
                   <InlineStack align="end">
-                    <Link url="#" monochrome removeUnderline>
+                    <Button variant="secondary" size="slim">
                       View all Templates
-                    </Link>
+                    </Button>
                   </InlineStack>
                 </BlockStack>
               </Box>
