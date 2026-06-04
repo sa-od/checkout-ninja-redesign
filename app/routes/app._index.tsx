@@ -14,6 +14,7 @@ import {
   EmptyState,
   Link,
   Divider,
+  InlineGrid,
 } from "@shopify/polaris";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -33,8 +34,6 @@ const TEMPLATES = [
 const USE_CASES = [
   { id: "1", brand: "Feetly" },
   { id: "2", brand: "Nuvita" },
-  { id: "3", brand: "Bloomcraft" },
-  { id: "4", brand: "ZeroWaste Co." },
 ];
 
 const TABS = [
@@ -45,13 +44,8 @@ const TABS = [
 
 export default function Index() {
   const [selectedTab, setSelectedTab] = useState(0);
-  const [carouselStart, setCarouselStart] = useState(0);
 
   const handleTabChange = useCallback((tab: number) => setSelectedTab(tab), []);
-
-  const visibleUseCases = USE_CASES.slice(carouselStart, carouselStart + 2);
-  const canGoBack = carouselStart > 0;
-  const canGoForward = carouselStart + 2 < USE_CASES.length;
 
   return (
     <Page title="Welcome">
@@ -189,34 +183,8 @@ export default function Index() {
             Discover What&apos;s Possible! Here are some real use cases.
           </Text>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "40px 1fr 40px",
-              gap: "16px",
-              alignItems: "center",
-            }}
-          >
-            {/* Prev button */}
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <Button
-                variant="tertiary"
-                disabled={!canGoBack}
-                onClick={() => setCarouselStart((s) => s - 1)}
-              >
-                ‹
-              </Button>
-            </div>
-
-            {/* Two visible cards */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "16px",
-              }}
-            >
-              {visibleUseCases.map((uc) => (
+          <InlineGrid columns={2} gap="400">
+              {USE_CASES.map((uc) => (
                 <div
                   key={uc.id}
                   style={{
@@ -308,19 +276,7 @@ export default function Index() {
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Next button */}
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <Button
-                variant="tertiary"
-                disabled={!canGoForward}
-                onClick={() => setCarouselStart((s) => s + 1)}
-              >
-                ›
-              </Button>
-            </div>
-          </div>
+          </InlineGrid>
         </BlockStack>
 
         <Divider />
