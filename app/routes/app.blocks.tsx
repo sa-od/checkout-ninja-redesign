@@ -16,13 +16,316 @@ import {
   Divider,
   Popover,
   ActionList,
+  Modal,
+  Icon,
+  InlineGrid,
+  Badge,
 } from "@shopify/polaris";
+import type { BadgeProps } from "@shopify/polaris";
 import {
   MenuHorizontalIcon,
   ImportIcon,
   ExportIcon,
-  ViewIcon,
+  ThemeTemplateIcon,
+  SearchIcon,
 } from "@shopify/polaris-icons";
+
+// ── Template browser data ─────────────────────────────────────────────────────
+
+const CATEGORIES = [
+  { id: "all", label: "All" },
+  { id: "upsell", label: "Upsell & Cross-Sell" },
+  { id: "personalisation", label: "Personalisation & Gift Options" },
+  { id: "checkout-notices", label: "Checkout Notices & Information" },
+  { id: "social-proof", label: "Social Proof & Reviews" },
+  { id: "trust", label: "Trust & Assurance" },
+];
+
+const CATEGORY_TONE: Record<string, BadgeProps["tone"]> = {
+  upsell: "success-strong",
+  personalisation: "magic",
+  "checkout-notices": "warning",
+  "social-proof": "info",
+  trust: "attention",
+};
+
+const TEMPLATES_DATA = [
+  {
+    id: 1,
+    name: "Available Coupons",
+    category: "upsell",
+    blocks: 1,
+    image: "/Templates/template1.png",
+  },
+  {
+    id: 2,
+    name: "Free Shipping Progress Bar",
+    category: "upsell",
+    blocks: 1,
+    image: "/Templates/template2.png",
+  },
+  {
+    id: 3,
+    name: "Checkout Upsell",
+    category: "upsell",
+    blocks: 1,
+    image: "/Templates/template3.png",
+  },
+  {
+    id: 4,
+    name: "Gift Option Toggle",
+    category: "personalisation",
+    blocks: 1,
+    image: "/Templates/template4.png",
+  },
+  {
+    id: 5,
+    name: "Add a Note to This Gift",
+    category: "personalisation",
+    blocks: 1,
+    image: "/Templates/template5.png",
+  },
+  {
+    id: 6,
+    name: "Customs Duties & Tax Guarantee Notice",
+    category: "checkout-notices",
+    blocks: 1,
+    image: "/Templates/template6.png",
+  },
+  {
+    id: 7,
+    name: "Google Review Testimonial",
+    category: "social-proof",
+    blocks: 1,
+    image: "/Templates/template7.png",
+  },
+  {
+    id: 8,
+    name: "Accepted Payment Methods",
+    category: "trust",
+    blocks: 1,
+    image: "/Templates/template8.png",
+  },
+  {
+    id: 9,
+    name: "Customer Reviews",
+    category: "checkout-notices",
+    blocks: 1,
+    image: "/Templates/template9.png",
+  },
+  {
+    id: 10,
+    name: "Trust Badges",
+    category: "social-proof",
+    blocks: 1,
+    image: "/Templates/template10.png",
+  },
+  {
+    id: 11,
+    name: "Star Ratings Display",
+    category: "checkout-notices",
+    blocks: 1,
+    image: "/Templates/template11.png",
+  },
+  {
+    id: 12,
+    name: "Green Promise Block",
+    category: "trust",
+    blocks: 3,
+    image: "/Templates/template12.png",
+  },
+];
+
+// ── Browse Templates modal ────────────────────────────────────────────────────
+
+function BrowseTemplatesModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
+
+  const filtered = TEMPLATES_DATA.filter((t) => {
+    const matchSearch = t.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchCat = activeCategory === "all" || t.category === activeCategory;
+    return matchSearch && matchCat;
+  });
+
+  const catLabel = (id: string) =>
+    CATEGORIES.find((c) => c.id === id)?.label ?? id;
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Start with Templates"
+      size="large"
+    >
+      <Modal.Section flush>
+        <div style={{ display: "flex", height: "580px" }}>
+          {/* ── Left sidebar: categories ── */}
+          <div
+            style={{
+              width: "220px",
+              flexShrink: 0,
+              borderRight: "1px solid #e1e3e5",
+              overflowY: "auto",
+              paddingTop: "8px",
+            }}
+          >
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(cat.id)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "10px 20px",
+                  textAlign: "left",
+                  background:
+                    activeCategory === cat.id ? "#f6f6f7" : "transparent",
+                  border: "none",
+                  borderLeft:
+                    activeCategory === cat.id
+                      ? "3px solid #1a1a1a"
+                      : "3px solid transparent",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  color: "#1a1a1a",
+                  fontWeight: activeCategory === cat.id ? 600 : 400,
+                  lineHeight: "20px",
+                }}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── Right panel ── */}
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            {/* Search */}
+            <div style={{ padding: "16px 16px 12px" }}>
+              <TextField
+                label="Search templates"
+                labelHidden
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search templates..."
+                prefix={<Icon source={SearchIcon} />}
+                autoComplete="off"
+              />
+            </div>
+
+            {/* Scrollable template grid */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }}>
+              {filtered.length === 0 ? (
+                <div style={{ padding: "40px", textAlign: "center" }}>
+                  <Text variant="bodyMd" tone="subdued" as="p">
+                    No templates found
+                  </Text>
+                </div>
+              ) : (
+                <InlineGrid columns={2} gap="400">
+                  {filtered.map((t) => {
+                    const tone =
+                      CATEGORY_TONE[t.category] ?? "attention-strong";
+                    return (
+                      <div
+                        key={t.id}
+                        style={{
+                          border: "1px solid #e1e3e5",
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                          background: "#fff",
+                        }}
+                      >
+                        {/* Preview image */}
+                        <div style={{ position: "relative" }}>
+                          <img
+                            src={t.image}
+                            alt={t.name}
+                            style={{
+                              width: "100%",
+                              display: "block",
+                              objectFit: "cover",
+                            }}
+                          />
+                          {activeCategory === "all" && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: "10px",
+                                right: "10px",
+                              }}
+                            >
+                              <Badge tone={tone}>{catLabel(t.category)}</Badge>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Card footer */}
+                        <div
+                          style={{
+                            padding: "12px 16px",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <BlockStack gap="050">
+                            <Text variant="bodyMd" fontWeight="semibold" as="p">
+                              {t.name}
+                            </Text>
+                            <Text variant="bodySm" tone="subdued" as="p">
+                              {t.blocks} Block{t.blocks > 1 ? "s" : ""}
+                            </Text>
+                          </BlockStack>
+                          <Button
+                            variant="primary"
+                            size="slim"
+                            onClick={onClose}
+                          >
+                            Use Template
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </InlineGrid>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div
+              style={{
+                padding: "12px 16px",
+                borderTop: "1px solid #e1e3e5",
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
+              <Button onClick={onClose}>Start with blank template</Button>
+            </div>
+          </div>
+        </div>
+      </Modal.Section>
+    </Modal>
+  );
+}
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
@@ -79,6 +382,7 @@ export default function Blocks() {
   const [status, setStatus] = useState("active");
   const [layoutType, setLayoutType] = useState("horizontal");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
 
   const handleStatusChange = useCallback(
     (value: string) => setStatus(value),
@@ -94,7 +398,11 @@ export default function Blocks() {
       title="New Checkout Block"
       backAction={{ content: "Blocks", url: "/app" }}
       secondaryActions={[
-        { content: "Browse Templates", icon: ViewIcon, onAction: () => {} },
+        {
+          content: "Browse Templates",
+          icon: ThemeTemplateIcon,
+          onAction: () => setTemplateModalOpen(true),
+        },
       ]}
       actionGroups={[
         {
@@ -118,7 +426,13 @@ export default function Blocks() {
                 start from scratch.
               </Text>
             </BlockStack>
-            <Button variant="primary" icon={ViewIcon}>Browse Templates</Button>
+            <Button
+              variant="primary"
+              icon={ThemeTemplateIcon}
+              onClick={() => setTemplateModalOpen(true)}
+            >
+              Browse Templates
+            </Button>
           </InlineStack>
         </Card>
 
@@ -291,6 +605,11 @@ export default function Blocks() {
           </Layout.Section>
         </Layout>
       </BlockStack>
+
+      <BrowseTemplatesModal
+        open={templateModalOpen}
+        onClose={() => setTemplateModalOpen(false)}
+      />
     </Page>
   );
 }
