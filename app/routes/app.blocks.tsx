@@ -18,6 +18,7 @@ import {
   ActionList,
   Modal,
   Icon,
+  ButtonGroup,
   InlineGrid,
   Badge,
   DropZone,
@@ -31,6 +32,10 @@ import {
   ExportIcon,
   ThemeTemplateIcon,
   SearchIcon,
+  ChartHistogramGrowthIcon,
+  EditIcon,
+  LayoutColumns3Icon,
+  ShieldCheckMarkIcon,
 } from "@shopify/polaris-icons";
 
 // ── Template browser data ─────────────────────────────────────────────────────
@@ -136,6 +141,166 @@ const TEMPLATES_DATA = [
     category: "trust",
     blocks: 3,
     image: "/Templates/template12.png",
+  },
+];
+
+// ── Choose Block Type modal data ──────────────────────────────────────────────
+
+const BLOCK_CATEGORIES = [
+  { id: "all", label: "All", count: 23, icon: null },
+  {
+    id: "conversion",
+    label: "Conversion Boosters",
+    icon: ChartHistogramGrowthIcon,
+    count: 3,
+  },
+  { id: "custom-fields", label: "Custom Fields", icon: EditIcon, count: 8 },
+  {
+    id: "layout",
+    label: "Layout & Content",
+    icon: LayoutColumns3Icon,
+    count: 6,
+  },
+  {
+    id: "trust",
+    label: "Trust & Security",
+    icon: ShieldCheckMarkIcon,
+    count: 6,
+  },
+];
+
+const BLOCKS_DATA = [
+  // Conversion Boosters
+  {
+    id: 1,
+    name: "Free Shipping Bar",
+    category: "conversion",
+    image: "/Blocks/block1.png",
+  },
+  {
+    id: 2,
+    name: "Countdown Timer",
+    category: "conversion",
+    image: "/Blocks/block2.png",
+  },
+  {
+    id: 3,
+    name: "Discount Banner",
+    category: "conversion",
+    image: "/Blocks/block3.png",
+  },
+  // Custom Fields
+  {
+    id: 4,
+    name: "Text Field",
+    category: "custom-fields",
+    image: "/Blocks/block4.png",
+  },
+  {
+    id: 5,
+    name: "Dropdown Select",
+    category: "custom-fields",
+    image: "/Blocks/block5.png",
+  },
+  {
+    id: 6,
+    name: "Date Picker",
+    category: "custom-fields",
+    image: "/Blocks/block6.png",
+  },
+  {
+    id: 7,
+    name: "Number Input",
+    category: "custom-fields",
+    image: "/Blocks/block7.png",
+  },
+  {
+    id: 8,
+    name: "Multi-line Text",
+    category: "custom-fields",
+    image: "/Blocks/block8.png",
+  },
+  {
+    id: 9,
+    name: "Checkbox Group",
+    category: "custom-fields",
+    image: "/Blocks/block9.png",
+  },
+  {
+    id: 10,
+    name: "Radio Buttons",
+    category: "custom-fields",
+    image: "/Blocks/block10.png",
+  },
+  {
+    id: 11,
+    name: "File Upload",
+    category: "custom-fields",
+    image: "/Blocks/block11.png",
+  },
+  // Layout & Content
+  {
+    id: 12,
+    name: "Image Banner",
+    category: "layout",
+    image: "/Blocks/block12.png",
+  },
+  {
+    id: 13,
+    name: "Two Column Layout",
+    category: "layout",
+    image: "/Blocks/block13.png",
+  },
+  {
+    id: 14,
+    name: "Accordion",
+    category: "layout",
+    image: "/Blocks/block14.png",
+  },
+  { id: 15, name: "Spacer", category: "layout", image: "/Blocks/block15.png" },
+  { id: 16, name: "Divider", category: "layout", image: "/Blocks/block16.png" },
+  {
+    id: 17,
+    name: "Card Block",
+    category: "layout",
+    image: "/Blocks/block17.png",
+  },
+  // Trust & Security
+  {
+    id: 18,
+    name: "Trust Badge",
+    category: "trust",
+    image: "/Blocks/block18.png",
+  },
+  {
+    id: 19,
+    name: "Payment Icon",
+    category: "trust",
+    image: "/Blocks/block19.png",
+  },
+  {
+    id: 20,
+    name: "SSL Badge",
+    category: "trust",
+    image: "/Blocks/block20.png",
+  },
+  {
+    id: 21,
+    name: "Money Back Guarantee",
+    category: "trust",
+    image: "/Blocks/block21.png",
+  },
+  {
+    id: 22,
+    name: "Review Stars",
+    category: "trust",
+    image: "/Blocks/block22.png",
+  },
+  {
+    id: 23,
+    name: "Customer Count",
+    category: "trust",
+    image: "/Blocks/block23.png",
   },
 ];
 
@@ -330,6 +495,147 @@ function BrowseTemplatesModal({
   );
 }
 
+// ── Choose Block Type modal ───────────────────────────────────────────────────
+
+function AddBlockModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
+
+  const filtered = BLOCKS_DATA.filter((b) => {
+    const matchSearch = b.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchCat = activeCategory === "all" || b.category === activeCategory;
+    return matchSearch && matchCat;
+  });
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Choose Block Type"
+      secondaryActions={[{ content: "Cancel", onAction: onClose }]}
+      size="large"
+    >
+      <Modal.Section flush>
+        <div
+          style={{ display: "flex", flexDirection: "column", height: "600px" }}
+        >
+          {/* Description */}
+          <div style={{ padding: "16px 20px 8px" }}>
+            <Text variant="bodyMd" tone="subdued" as="p">
+              Select the type of block you want to add to your checkout. Each
+              block type has specific settings you can configure.
+            </Text>
+          </div>
+
+          {/* Category pills */}
+          <Box
+            paddingInlineStart="400"
+            paddingInlineEnd="400"
+            paddingBlockEnd="300"
+          >
+            <ButtonGroup gap="loose">
+              {BLOCK_CATEGORIES.map((cat) => (
+                <Button
+                  key={cat.id}
+                  pressed={activeCategory === cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  icon={cat.icon ?? undefined}
+                  size="slim"
+                  variant="tertiary"
+                >
+                  {cat.label} ({cat.count.toString()})
+                </Button>
+              ))}
+            </ButtonGroup>
+          </Box>
+
+          {/* Search */}
+          <div style={{ padding: "0 20px 12px" }}>
+            <TextField
+              label="Search block types"
+              labelHidden
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search block types..."
+              prefix={<Icon source={SearchIcon} />}
+              autoComplete="off"
+            />
+          </div>
+
+          {/* Scrollable grid */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 20px" }}>
+            {filtered.length === 0 ? (
+              <div style={{ padding: "40px", textAlign: "center" }}>
+                <Text variant="bodyMd" tone="subdued" as="p">
+                  No block types found
+                </Text>
+              </div>
+            ) : (
+              <InlineGrid columns={2} gap="400">
+                {filtered.map((block) => (
+                  <div
+                    key={block.id}
+                    style={{
+                      border: "1px solid #e1e3e5",
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                      background: "#fff",
+                    }}
+                  >
+                    {/* Preview image */}
+                    <div
+                      style={{
+                        background: "#f6f6f7",
+                        padding: "16px",
+                        borderBottom: "1px solid #e1e3e5",
+                      }}
+                    >
+                      <img
+                        src={block.image}
+                        alt={block.name}
+                        style={{
+                          width: "100%",
+                          display: "block",
+                          objectFit: "contain",
+                        }}
+                      />
+                    </div>
+                    {/* Footer */}
+                    <div
+                      style={{
+                        padding: "10px 14px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <Text variant="bodyMd" fontWeight="semibold" as="p">
+                        {block.name}
+                      </Text>
+                      <Button variant="primary" size="slim" onClick={onClose}>
+                        Add to checkout
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </InlineGrid>
+            )}
+          </div>
+        </div>
+      </Modal.Section>
+    </Modal>
+  );
+}
+
 // ── Import JSON modal ─────────────────────────────────────────────────────────
 
 function ImportModal({
@@ -488,6 +794,7 @@ export default function Blocks() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [addBlockModalOpen, setAddBlockModalOpen] = useState(false);
 
   const handleStatusChange = useCallback(
     (value: string) => setStatus(value),
@@ -513,7 +820,11 @@ export default function Blocks() {
         {
           title: "More actions",
           actions: [
-            { content: "Import", icon: ImportIcon, onAction: () => setImportModalOpen(true) },
+            {
+              content: "Import",
+              icon: ImportIcon,
+              onAction: () => setImportModalOpen(true),
+            },
           ],
         },
       ]}
@@ -593,7 +904,12 @@ export default function Blocks() {
                       </Text>
                     </BlockStack>
                     <InlineStack gap="200">
-                      <Button variant="primary">+ Add block</Button>
+                      <Button
+                        variant="primary"
+                        onClick={() => setAddBlockModalOpen(true)}
+                      >
+                        + Add block
+                      </Button>
                       <Popover
                         active={menuOpen}
                         activator={
@@ -646,7 +962,9 @@ export default function Blocks() {
                   <Divider />
 
                   <InlineStack align="center">
-                    <Button>+ Add block</Button>
+                    <Button onClick={() => setAddBlockModalOpen(true)}>
+                      + Add block
+                    </Button>
                   </InlineStack>
                 </BlockStack>
               </Card>
@@ -719,6 +1037,11 @@ export default function Blocks() {
       <ImportModal
         open={importModalOpen}
         onClose={() => setImportModalOpen(false)}
+      />
+
+      <AddBlockModal
+        open={addBlockModalOpen}
+        onClose={() => setAddBlockModalOpen(false)}
       />
     </Page>
   );
