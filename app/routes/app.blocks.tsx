@@ -20,6 +20,9 @@ import {
   Icon,
   InlineGrid,
   Badge,
+  DropZone,
+  ChoiceList,
+  Link,
 } from "@shopify/polaris";
 import type { BadgeProps } from "@shopify/polaris";
 import {
@@ -327,6 +330,107 @@ function BrowseTemplatesModal({
   );
 }
 
+// ── Import JSON modal ─────────────────────────────────────────────────────────
+
+function ImportModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [files, setFiles] = useState<File[]>([]);
+  const [importBehavior, setImportBehavior] = useState(["override"]);
+
+  const handleDropZoneDrop = useCallback(
+    (_dropFiles: File[], acceptedFiles: File[]) => {
+      setFiles((f) => [...f, ...acceptedFiles]);
+    },
+    [],
+  );
+
+  const fileUploadMarkup = !files.length ? (
+    <DropZone.FileUpload
+      actionTitle="Add file"
+      actionHint="Drag and drop your JSON file here, or click Add file"
+    />
+  ) : (
+    <BlockStack gap="200">
+      {files.map((file) => (
+        <Text key={file.name} variant="bodyMd" as="p">
+          {file.name}
+        </Text>
+      ))}
+    </BlockStack>
+  );
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Import data by JSON"
+      primaryAction={{ content: "Upload and preview", onAction: onClose }}
+      secondaryActions={[{ content: "Cancel", onAction: onClose }]}
+    >
+      <Modal.Section>
+        <BlockStack gap="400">
+          <DropZone
+            accept=".json"
+            type="file"
+            onDrop={handleDropZoneDrop}
+            label="Upload JSON file"
+            labelHidden
+          >
+            {fileUploadMarkup}
+          </DropZone>
+
+          <Box
+            borderWidth="025"
+            borderColor="border"
+            borderRadius="200"
+            padding="400"
+          >
+            <BlockStack gap="300">
+              <BlockStack gap="100">
+                <Text variant="bodyMd" fontWeight="semibold" as="p">
+                  Import behavior
+                </Text>
+                <Text variant="bodyMd" tone="subdued" as="p">
+                  Choose how to handle existing data when importing
+                </Text>
+              </BlockStack>
+              <ChoiceList
+                title="Import behavior"
+                titleHidden
+                choices={[
+                  {
+                    label: "Override existing data",
+                    value: "override",
+                    helpText:
+                      "Replace all current form data with imported data",
+                  },
+                  {
+                    label: "Append to existing data",
+                    value: "append",
+                    helpText:
+                      "Add imported data to existing data (for arrays like blocks, rules)",
+                  },
+                ]}
+                selected={importBehavior}
+                onChange={setImportBehavior}
+              />
+            </BlockStack>
+          </Box>
+
+          <Link url="#" removeUnderline>
+            Download sample JSON
+          </Link>
+        </BlockStack>
+      </Modal.Section>
+    </Modal>
+  );
+}
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
   return null;
@@ -383,6 +487,7 @@ export default function Blocks() {
   const [layoutType, setLayoutType] = useState("horizontal");
   const [menuOpen, setMenuOpen] = useState(false);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   const handleStatusChange = useCallback(
     (value: string) => setStatus(value),
@@ -408,7 +513,7 @@ export default function Blocks() {
         {
           title: "More actions",
           actions: [
-            { content: "Import", icon: ImportIcon, onAction: () => {} },
+            { content: "Import", icon: ImportIcon, onAction: () => setImportModalOpen(true) },
           ],
         },
       ]}
@@ -609,6 +714,11 @@ export default function Blocks() {
       <BrowseTemplatesModal
         open={templateModalOpen}
         onClose={() => setTemplateModalOpen(false)}
+      />
+
+      <ImportModal
+        open={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
       />
     </Page>
   );
