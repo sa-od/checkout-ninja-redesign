@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -21,6 +21,8 @@ import {
   ThemeTemplateIcon,
   EditIcon,
   ExportIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@shopify/polaris-icons";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -73,9 +75,13 @@ const USE_CASES = [
 ];
 
 export default function Index() {
-  const [activeCaseStudyId, setActiveCaseStudyId] = useState<string | null>(
-    null,
-  );
+  const [activeCaseStudyId, setActiveCaseStudyId] = useState<string | null>(null);
+  const [showArrows, setShowArrows] = useState(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  const scrollCarousel = (dir: "left" | "right") => {
+    carouselRef.current?.scrollBy({ left: dir === "left" ? -260 : 260, behavior: "smooth" });
+  };
 
   const activeCaseStudy =
     USE_CASES.find((uc) => uc.id === activeCaseStudyId) ?? null;
@@ -136,14 +142,82 @@ export default function Index() {
               </Text>
             </InlineStack>
             <div
-              style={{
-                display: "flex",
-                gap: "var(--p-space-400)",
-                overflowX: "auto",
-                paddingBottom: "var(--p-space-200)",
-                scrollSnapType: "x mandatory",
-              }}
+              style={{ position: "relative" }}
+              onMouseEnter={() => setShowArrows(true)}
+              onMouseLeave={() => setShowArrows(false)}
             >
+              {/* Left arrow */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: "8px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  zIndex: 10,
+                  opacity: showArrows ? 1 : 0,
+                  transition: "opacity 0.15s",
+                  pointerEvents: showArrows ? "auto" : "none",
+                  background: "var(--p-color-bg-surface)",
+                  borderRadius: "50%",
+                  boxShadow: "var(--p-shadow-200)",
+                  border: "1px solid var(--p-color-border)",
+                  overflow: "hidden",
+                  width: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Button
+                  icon={ChevronLeftIcon}
+                  accessibilityLabel="Scroll left"
+                  variant="tertiary"
+                  onClick={() => scrollCarousel("left")}
+                />
+              </div>
+
+              {/* Right arrow */}
+              <div
+                style={{
+                  position: "absolute",
+                  right: "8px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  zIndex: 10,
+                  opacity: showArrows ? 1 : 0,
+                  transition: "opacity 0.15s",
+                  pointerEvents: showArrows ? "auto" : "none",
+                  background: "var(--p-color-bg-surface)",
+                  borderRadius: "50%",
+                  boxShadow: "var(--p-shadow-200)",
+                  border: "1px solid var(--p-color-border)",
+                  overflow: "hidden",
+                  width: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Button
+                  icon={ChevronRightIcon}
+                  accessibilityLabel="Scroll right"
+                  variant="tertiary"
+                  onClick={() => scrollCarousel("right")}
+                />
+              </div>
+
+              <div
+                ref={carouselRef}
+                style={{
+                  display: "flex",
+                  gap: "var(--p-space-400)",
+                  overflowX: "auto",
+                  paddingBottom: "var(--p-space-200)",
+                  scrollSnapType: "x mandatory",
+                }}
+              >
               {TEMPLATES.map((item) => (
                 <div
                   key={item.id}
@@ -189,6 +263,7 @@ export default function Index() {
                   </div>
                 </div>
               ))}
+              </div>
             </div>
             <InlineStack align="end">
               <Button variant="secondary" size="slim">
