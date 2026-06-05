@@ -41,9 +41,74 @@ import {
   DragHandleIcon,
   SettingsIcon,
   ViewIcon,
+  HideIcon,
   DeleteIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
 } from "@shopify/polaris-icons";
 import { useAppBridge } from "@shopify/app-bridge-react";
+
+// ── Condition options ─────────────────────────────────────────────────────────
+
+const CONDITION_OPTIONS = [
+  { label: "Select an option", value: "" },
+  { label: "Cart Total", value: "cart_total" },
+  { label: "Variant not in cart", value: "variant_not_in_cart" },
+  { label: "Variant in cart", value: "variant_in_cart" },
+  { label: "Product in cart", value: "product_in_cart" },
+  { label: "Product not in cart", value: "product_not_in_cart" },
+  { label: "Product quantity in cart", value: "product_quantity_in_cart" },
+  { label: "Product type in cart", value: "product_type_in_cart" },
+  { label: "Product type not in cart", value: "product_type_not_in_cart" },
+  {
+    label: "No of Products (Include quantity for each product)",
+    value: "no_of_products",
+  },
+  { label: "Vendor Name in cart", value: "vendor_name_in_cart" },
+  { label: "Vendor Name not in cart", value: "vendor_name_not_in_cart" },
+  { label: "Customer billing has phone", value: "customer_billing_has_phone" },
+  { label: "Customer billing has email", value: "customer_billing_has_email" },
+  { label: "Gift card is applied", value: "gift_card_is_applied" },
+  { label: "No of gift cards applied", value: "no_of_gift_cards_applied" },
+  { label: "First Name", value: "first_name" },
+  { label: "Last Name", value: "last_name" },
+  { label: "Shipping Address 1", value: "shipping_address_1" },
+  { label: "Shipping Address 2", value: "shipping_address_2" },
+  { label: "Shipping Country", value: "shipping_country" },
+  { label: "Shipping State / Province", value: "shipping_state_province" },
+  {
+    label: "Shipping Delivery method title Selected by Customer",
+    value: "shipping_delivery_method_title",
+  },
+  {
+    label: "When delivery type is shop pickup",
+    value: "delivery_type_shop_pickup",
+  },
+  { label: "Payment Method Type", value: "payment_method_type" },
+  { label: "Payment Method Handle", value: "payment_method_handle" },
+  {
+    label: "Discount Code (order and shipping discounts only)",
+    value: "discount_code",
+  },
+  {
+    label: "Discount Title (order and shipping discounts only)",
+    value: "discount_title",
+  },
+  { label: "Product Discount Code", value: "product_discount_code" },
+  { label: "Product Discount Title", value: "product_discount_title" },
+  { label: "Cart attribute key and value", value: "cart_attribute_key_value" },
+  { label: "Cart metafield key and value", value: "cart_metafield_key_value" },
+];
+
+const COMPARISON_OPTIONS = [
+  { label: "-", value: "" },
+  { label: "Greater than", value: "gt" },
+  { label: "Less than", value: "lt" },
+  { label: "Equal to", value: "eq" },
+  { label: "Not equal to", value: "ne" },
+  { label: "Greater than or equal", value: "gte" },
+  { label: "Less than or equal", value: "lte" },
+];
 
 // ── Template browser data ─────────────────────────────────────────────────────
 
@@ -475,7 +540,11 @@ function BrowseTemplatesModal({
                             variant="primary"
                             size="slim"
                             onClick={() => {
-                              onSelect({ id: t.id, name: t.name, category: t.category });
+                              onSelect({
+                                id: t.id,
+                                name: t.name,
+                                category: t.category,
+                              });
                               onClose();
                             }}
                           >
@@ -509,7 +578,13 @@ function BrowseTemplatesModal({
 
 // ── Choose Block Type modal ───────────────────────────────────────────────────
 
-type AddedBlock = { instanceId: number; id: number; name: string; category: string };
+type AddedBlock = {
+  instanceId: number;
+  id: number;
+  name: string;
+  category: string;
+  active: boolean;
+};
 
 function AddBlockModal({
   open,
@@ -641,7 +716,13 @@ function AddBlockModal({
                         variant="primary"
                         size="slim"
                         onClick={() => {
-                          onAdd({ instanceId: Date.now(), id: block.id, name: block.name, category: block.category });
+                          onAdd({
+                            instanceId: Date.now(),
+                            id: block.id,
+                            name: block.name,
+                            category: block.category,
+                            active: true,
+                          });
                           onClose();
                         }}
                       >
@@ -821,9 +902,333 @@ export default function Blocks() {
   const [addBlockModalOpen, setAddBlockModalOpen] = useState(false);
   const [exportToastActive, setExportToastActive] = useState(false);
   const [addedBlocks, setAddedBlocks] = useState<AddedBlock[]>([]);
+  const [conditions, setConditions] = useState<
+    { id: number; value: string; extras: Record<string, string> }[]
+  >([]);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const isDirty = addedBlocks.length > 0 || blockName !== "";
+  const isDirty =
+    addedBlocks.length > 0 ||
+    blockName !== "" ||
+    conditionalVisibility ||
+    conditions.length > 0;
+
+  const addCondition = useCallback(
+    () =>
+      setConditions((prev) => [
+        ...prev,
+        { id: Date.now(), value: "", extras: {} },
+      ]),
+    [],
+  );
+  const removeCondition = useCallback(
+    (id: number) => setConditions((prev) => prev.filter((c) => c.id !== id)),
+    [],
+  );
+  const updateCondition = useCallback(
+    (id: number, value: string) =>
+      setConditions((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, value, extras: {} } : c)),
+      ),
+    [],
+  );
+  const updateConditionExtra = useCallback(
+    (id: number, key: string, val: string) =>
+      setConditions((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, extras: { ...c.extras, [key]: val } } : c,
+        ),
+      ),
+    [],
+  );
+  const moveConditionUp = useCallback(
+    (id: number) =>
+      setConditions((prev) => {
+        const idx = prev.findIndex((c) => c.id === id);
+        if (idx <= 0) return prev;
+        const next = [...prev];
+        [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+        return next;
+      }),
+    [],
+  );
+  const moveConditionDown = useCallback(
+    (id: number) =>
+      setConditions((prev) => {
+        const idx = prev.findIndex((c) => c.id === id);
+        if (idx >= prev.length - 1) return prev;
+        const next = [...prev];
+        [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+        return next;
+      }),
+    [],
+  );
+
+  const renderConditionExtras = (cond: {
+    id: number;
+    value: string;
+    extras: Record<string, string>;
+  }) => {
+    const upd = (key: string, val: string) =>
+      updateConditionExtra(cond.id, key, val);
+    const e = cond.extras;
+    switch (cond.value) {
+      case "cart_total":
+        return (
+          <InlineGrid columns={2} gap="300">
+            <Select
+              label="When cart total is"
+              options={COMPARISON_OPTIONS}
+              value={e.comparison ?? ""}
+              onChange={(v) => upd("comparison", v)}
+            />
+            <TextField
+              label="Amount"
+              value={e.amount ?? ""}
+              onChange={(v) => upd("amount", v)}
+              helpText="Enter the amount in your store currency"
+              type="number"
+              autoComplete="off"
+            />
+          </InlineGrid>
+        );
+      case "variant_in_cart":
+      case "variant_not_in_cart":
+        return (
+          <BlockStack gap="100">
+            <Text variant="bodySm" fontWeight="medium" as="p">
+              Product Variant
+            </Text>
+            <Button fullWidth onClick={() => {}}>
+              Select Product Variant
+            </Button>
+          </BlockStack>
+        );
+      case "product_in_cart":
+      case "product_not_in_cart":
+        return (
+          <BlockStack gap="100">
+            <Text variant="bodySm" fontWeight="medium" as="p">
+              Product
+            </Text>
+            <Button fullWidth onClick={() => {}}>
+              Select Product
+            </Button>
+          </BlockStack>
+        );
+      case "product_quantity_in_cart":
+        return (
+          <InlineGrid columns={2} gap="300">
+            <Select
+              label="When quantity is"
+              options={COMPARISON_OPTIONS}
+              value={e.comparison ?? ""}
+              onChange={(v) => upd("comparison", v)}
+            />
+            <TextField
+              label="Quantity"
+              value={e.quantity ?? ""}
+              onChange={(v) => upd("quantity", v)}
+              type="number"
+              autoComplete="off"
+            />
+          </InlineGrid>
+        );
+      case "no_of_products":
+        return (
+          <InlineGrid columns={2} gap="300">
+            <Select
+              label="When count is"
+              options={COMPARISON_OPTIONS}
+              value={e.comparison ?? ""}
+              onChange={(v) => upd("comparison", v)}
+            />
+            <TextField
+              label="Number"
+              value={e.number ?? ""}
+              onChange={(v) => upd("number", v)}
+              type="number"
+              autoComplete="off"
+            />
+          </InlineGrid>
+        );
+      case "no_of_gift_cards_applied":
+        return (
+          <InlineGrid columns={2} gap="300">
+            <Select
+              label="When count is"
+              options={COMPARISON_OPTIONS}
+              value={e.comparison ?? ""}
+              onChange={(v) => upd("comparison", v)}
+            />
+            <TextField
+              label="Count"
+              value={e.count ?? ""}
+              onChange={(v) => upd("count", v)}
+              type="number"
+              autoComplete="off"
+            />
+          </InlineGrid>
+        );
+      case "cart_attribute_key_value":
+      case "cart_metafield_key_value":
+        return (
+          <InlineGrid columns={2} gap="300">
+            <TextField
+              label="Key"
+              value={e.key ?? ""}
+              onChange={(v) => upd("key", v)}
+              autoComplete="off"
+            />
+            <TextField
+              label="Value"
+              value={e.value ?? ""}
+              onChange={(v) => upd("value", v)}
+              autoComplete="off"
+            />
+          </InlineGrid>
+        );
+      case "product_type_in_cart":
+      case "product_type_not_in_cart":
+        return (
+          <TextField
+            label="Product Type"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "vendor_name_in_cart":
+      case "vendor_name_not_in_cart":
+        return (
+          <TextField
+            label="Vendor Name"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "first_name":
+        return (
+          <TextField
+            label="First Name"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "last_name":
+        return (
+          <TextField
+            label="Last Name"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "shipping_address_1":
+        return (
+          <TextField
+            label="Shipping Address 1"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "shipping_address_2":
+        return (
+          <TextField
+            label="Shipping Address 2"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "shipping_country":
+        return (
+          <TextField
+            label="Shipping Country"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "shipping_state_province":
+        return (
+          <TextField
+            label="Shipping State / Province"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "shipping_delivery_method_title":
+        return (
+          <TextField
+            label="Delivery Method Title"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "payment_method_type":
+        return (
+          <TextField
+            label="Payment Method Type"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "payment_method_handle":
+        return (
+          <TextField
+            label="Payment Method Handle"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "discount_code":
+        return (
+          <TextField
+            label="Discount Code"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "discount_title":
+        return (
+          <TextField
+            label="Discount Title"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "product_discount_code":
+        return (
+          <TextField
+            label="Product Discount Code"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      case "product_discount_title":
+        return (
+          <TextField
+            label="Product Discount Title"
+            value={e.text ?? ""}
+            onChange={(v) => upd("text", v)}
+            autoComplete="off"
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   useEffect(() => {
     if (isDirty) {
@@ -848,6 +1253,7 @@ export default function Blocks() {
     setAddedBlocks([]);
     setBlockName("");
     setConditionalVisibility(false);
+    setConditions([]);
     shopify.saveBar.hide("blocks-save-bar");
   }, []);
 
@@ -919,23 +1325,85 @@ export default function Blocks() {
 
                 {/* Conditional block visibility */}
                 <Card>
-                  <BlockStack gap="200">
+                  <BlockStack gap="400">
                     <InlineStack gap="400" blockAlign="start" wrap={false}>
                       <Toggle
                         checked={conditionalVisibility}
-                        onChange={setConditionalVisibility}
+                        onChange={(val) => {
+                          setConditionalVisibility(val);
+                          if (!val) setConditions([]);
+                        }}
                       />
-                      <BlockStack gap="100">
-                        <Text variant="bodyMd" fontWeight="semibold" as="p">
-                          Enable conditional block visibility
-                        </Text>
-                      </BlockStack>
+                      <Text variant="bodyMd" fontWeight="semibold" as="p">
+                        Enable conditional block visibility
+                      </Text>
                     </InlineStack>
                     <Text variant="bodyMd" tone="subdued" as="p">
                       When enabled, blocks will only appear when your specified
                       conditions are met. When disabled, blocks are always
                       visible.
                     </Text>
+
+                    {conditionalVisibility && (
+                      <BlockStack gap="300">
+                        {conditions.map((condition, index) => (
+                          <Box
+                            key={condition.id}
+                            background="bg-surface-secondary"
+                            borderRadius="200"
+                            padding="400"
+                          >
+                            <BlockStack gap="300">
+                              <Select
+                                label="Condition"
+                                options={CONDITION_OPTIONS}
+                                value={condition.value}
+                                onChange={(val) =>
+                                  updateCondition(condition.id, val)
+                                }
+                              />
+                              {renderConditionExtras(condition)}
+                              <InlineStack align="space-between">
+                                <InlineStack gap="100">
+                                  {index > 0 && (
+                                    <Button
+                                      icon={ArrowUpIcon}
+                                      size="slim"
+                                      accessibilityLabel="Move up"
+                                      onClick={() =>
+                                        moveConditionUp(condition.id)
+                                      }
+                                    />
+                                  )}
+                                  {index < conditions.length - 1 && (
+                                    <Button
+                                      icon={ArrowDownIcon}
+                                      size="slim"
+                                      accessibilityLabel="Move down"
+                                      onClick={() =>
+                                        moveConditionDown(condition.id)
+                                      }
+                                    />
+                                  )}
+                                </InlineStack>
+                                <Button
+                                  icon={DeleteIcon}
+                                  variant="tertiary"
+                                  tone="critical"
+                                  accessibilityLabel="Remove condition"
+                                  onClick={() => removeCondition(condition.id)}
+                                />
+                              </InlineStack>
+                            </BlockStack>
+                          </Box>
+                        ))}
+                        <InlineStack align="end">
+                          <Button variant="primary" onClick={addCondition}>
+                            + Add new visibility condition
+                          </Button>
+                        </InlineStack>
+                      </BlockStack>
+                    )}
                   </BlockStack>
                 </Card>
 
@@ -1030,14 +1498,43 @@ export default function Blocks() {
                             }}
                           >
                             <Icon source={DragHandleIcon} tone="subdued" />
-                            <Badge>{block.name.toLowerCase().replace(/\s+/g, "_")}</Badge>
-                            <Text variant="bodyMd" fontWeight="semibold" as="span">
+                            <Badge>
+                              {block.name.toLowerCase().replace(/\s+/g, "_")}
+                            </Badge>
+                            <Text
+                              variant="bodyMd"
+                              fontWeight="semibold"
+                              as="span"
+                            >
                               {block.name}
                             </Text>
                             <div style={{ flex: 1 }} />
-                            <Badge tone="success">Active</Badge>
-                            <Button icon={SettingsIcon} variant="tertiary" size="slim" accessibilityLabel="Settings" />
-                            <Button icon={ViewIcon} variant="tertiary" size="slim" accessibilityLabel="Preview" />
+                            <Badge tone={block.active ? "success" : undefined}>
+                              {block.active ? "Active" : "Inactive"}
+                            </Badge>
+                            <Button
+                              icon={SettingsIcon}
+                              variant="tertiary"
+                              size="slim"
+                              accessibilityLabel="Settings"
+                            />
+                            <Button
+                              icon={block.active ? ViewIcon : HideIcon}
+                              variant="tertiary"
+                              size="slim"
+                              accessibilityLabel={
+                                block.active ? "Disable block" : "Enable block"
+                              }
+                              onClick={() =>
+                                setAddedBlocks((prev) =>
+                                  prev.map((b: AddedBlock) =>
+                                    b.instanceId === block.instanceId
+                                      ? { ...b, active: !b.active }
+                                      : b,
+                                  ),
+                                )
+                              }
+                            />
                             <Button
                               icon={DeleteIcon}
                               variant="tertiary"
@@ -1046,7 +1543,9 @@ export default function Blocks() {
                               accessibilityLabel="Delete"
                               onClick={() =>
                                 setAddedBlocks((prev) =>
-                                  prev.filter((b) => b.instanceId !== block.instanceId),
+                                  prev.filter(
+                                    (b) => b.instanceId !== block.instanceId,
+                                  ),
                                 )
                               }
                             />
@@ -1132,7 +1631,13 @@ export default function Blocks() {
             setBlockName(template.name);
             setAddedBlocks((prev) => [
               ...prev,
-              { instanceId: Date.now(), id: template.id, name: template.name, category: template.category },
+              {
+                instanceId: Date.now(),
+                id: template.id,
+                name: template.name,
+                category: template.category,
+                active: true,
+              },
             ]);
           }}
         />
@@ -1157,7 +1662,9 @@ export default function Blocks() {
       </Page>
 
       <ui-save-bar id="blocks-save-bar">
-        <button variant="primary" onClick={handleSave}>Save</button>
+        <button variant="primary" onClick={handleSave}>
+          Save
+        </button>
         <button onClick={handleDiscard}>Discard</button>
       </ui-save-bar>
     </Frame>
