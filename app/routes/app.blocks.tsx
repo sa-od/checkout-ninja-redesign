@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
-import { useSearchParams } from "react-router";
+import { useSearchParams, useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import {
@@ -45,6 +45,7 @@ import {
   DeleteIcon,
   ArrowUpIcon,
   ArrowDownIcon,
+  ClipboardIcon,
 } from "@shopify/polaris-icons";
 import { useAppBridge } from "@shopify/app-bridge-react";
 
@@ -892,6 +893,7 @@ function Toggle({
 
 export default function Blocks() {
   const shopify = useAppBridge();
+  const navigate = useNavigate();
   const [blockName, setBlockName] = useState("");
   const [conditionalVisibility, setConditionalVisibility] = useState(false);
   const [status, setStatus] = useState("active");
@@ -901,6 +903,9 @@ export default function Blocks() {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [addBlockModalOpen, setAddBlockModalOpen] = useState(false);
   const [exportToastActive, setExportToastActive] = useState(false);
+  const [saveToastActive, setSaveToastActive] = useState(false);
+  const [savedBlockId, setSavedBlockId] = useState<string | null>(null);
+  const [copyToastActive, setCopyToastActive] = useState(false);
   const [addedBlocks, setAddedBlocks] = useState<AddedBlock[]>([]);
   const [conditions, setConditions] = useState<
     { id: number; value: string; extras: Record<string, string> }[]
@@ -1246,8 +1251,17 @@ export default function Blocks() {
   }, []);
 
   const handleSave = useCallback(() => {
+    setSavedBlockId(String(Date.now()));
     shopify.saveBar.hide("blocks-save-bar");
+    setSaveToastActive(true);
   }, []);
+
+  const handleCopyId = useCallback(() => {
+    if (savedBlockId) {
+      navigator.clipboard.writeText(savedBlockId);
+      setCopyToastActive(true);
+    }
+  }, [savedBlockId]);
 
   const handleDiscard = useCallback(() => {
     setAddedBlocks([]);
@@ -1270,7 +1284,7 @@ export default function Blocks() {
     <Frame>
       <Page
         title="New Checkout Block"
-        backAction={{ content: "Blocks", url: "/app" }}
+        backAction={{ content: "Blocks", onAction: () => navigate("/app") }}
         actionGroups={[
           {
             title: "More actions",
@@ -1598,6 +1612,20 @@ export default function Blocks() {
                       Copy this ID and paste it in the content block to use it
                       in the checkout page
                     </Text>
+                    {savedBlockId && (
+                      <InlineStack gap="200" blockAlign="center">
+                        <Text variant="headingMd" as="p" fontWeight="bold">
+                          {savedBlockId}
+                        </Text>
+                        <Button
+                          icon={ClipboardIcon}
+                          variant="tertiary"
+                          size="slim"
+                          accessibilityLabel="Copy block ID"
+                          onClick={handleCopyId}
+                        />
+                      </InlineStack>
+                    )}
                     <Button>Open Checkout Editor</Button>
                   </BlockStack>
                 </Card>
@@ -1653,10 +1681,22 @@ export default function Blocks() {
           onAdd={(block) => setAddedBlocks((prev) => [...prev, block])}
         />
 
+        {saveToastActive && (
+          <Toast
+            content="Block saved successfully"
+            onDismiss={() => setSaveToastActive(false)}
+          />
+        )}
         {exportToastActive && (
           <Toast
             content="Downloading..."
             onDismiss={() => setExportToastActive(false)}
+          />
+        )}
+        {copyToastActive && (
+          <Toast
+            content="Block ID copied to clipboard"
+            onDismiss={() => setCopyToastActive(false)}
           />
         )}
       </Page>
