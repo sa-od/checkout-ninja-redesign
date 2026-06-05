@@ -32,7 +32,6 @@ import {
   MenuHorizontalIcon,
   ImportIcon,
   ExportIcon,
-  ThemeTemplateIcon,
   SearchIcon,
   ChartHistogramGrowthIcon,
   EditIcon,
@@ -816,7 +815,7 @@ export default function Blocks() {
         secondaryActions={[
           {
             content: "Browse Templates",
-            icon: ThemeTemplateIcon,
+            icon: SearchIcon,
             onAction: () => setTemplateModalOpen(true),
           },
         ]}
@@ -848,7 +847,7 @@ export default function Blocks() {
             </BlockStack>
             <Button
               variant="primary"
-              icon={ThemeTemplateIcon}
+              icon={SearchIcon}
               onClick={() => setTemplateModalOpen(true)}
             >
               Browse Templates
