@@ -420,37 +420,33 @@ function BrowseTemplatesModal({
             style={{
               width: "220px",
               flexShrink: 0,
-              borderRight: "1px solid #e1e3e5",
+              borderRight: "1px solid var(--p-color-border)",
               overflowY: "auto",
               paddingTop: "8px",
             }}
           >
             {CATEGORIES.map((cat) => (
-              <button
+              <div
                 key={cat.id}
-                type="button"
-                onClick={() => setActiveCategory(cat.id)}
                 style={{
-                  display: "block",
-                  width: "100%",
-                  padding: "10px 20px",
-                  textAlign: "left",
-                  background:
-                    activeCategory === cat.id ? "#f6f6f7" : "transparent",
-                  border: "none",
-                  borderLeft:
-                    activeCategory === cat.id
-                      ? "3px solid #1a1a1a"
-                      : "3px solid transparent",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  color: "#1a1a1a",
-                  fontWeight: activeCategory === cat.id ? 600 : 400,
-                  lineHeight: "20px",
+                  borderLeft: activeCategory === cat.id
+                    ? "3px solid var(--p-color-text)"
+                    : "3px solid transparent",
+                  background: activeCategory === cat.id
+                    ? "var(--p-color-bg-surface-secondary)"
+                    : "transparent",
                 }}
               >
-                {cat.label}
-              </button>
+                <Button
+                  variant="tertiary"
+                  pressed={activeCategory === cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  fullWidth
+                  textAlign="left"
+                >
+                  {cat.label}
+                </Button>
+              </div>
             ))}
           </div>
 
@@ -493,10 +489,10 @@ function BrowseTemplatesModal({
                       <div
                         key={t.id}
                         style={{
-                          border: "1px solid #e1e3e5",
+                          border: "1px solid var(--p-color-border)",
                           borderRadius: "8px",
                           overflow: "hidden",
-                          background: "#fff",
+                          background: "var(--p-color-bg-surface)",
                         }}
                       >
                         {/* Preview image */}
@@ -567,7 +563,7 @@ function BrowseTemplatesModal({
             <div
               style={{
                 padding: "12px 16px",
-                borderTop: "1px solid #e1e3e5",
+                borderTop: "1px solid var(--p-color-border)",
                 display: "flex",
                 justifyContent: "flex-end",
               }}
@@ -680,18 +676,18 @@ function AddBlockModal({
                   <div
                     key={block.id}
                     style={{
-                      border: "1px solid #e1e3e5",
+                      border: "1px solid var(--p-color-border)",
                       borderRadius: "8px",
                       overflow: "hidden",
-                      background: "#fff",
+                      background: "var(--p-color-bg-surface)",
                     }}
                   >
                     {/* Preview image */}
                     <div
                       style={{
-                        background: "#f6f6f7",
+                        background: "var(--p-color-bg-surface-secondary)",
                         padding: "16px",
-                        borderBottom: "1px solid #e1e3e5",
+                        borderBottom: "1px solid var(--p-color-border)",
                       }}
                     >
                       <img
@@ -1290,9 +1286,8 @@ export default function Blocks() {
     if (savedBlockId) {
       navigator.clipboard.writeText(savedBlockId);
       setCopyToastActive(true);
-      dismissFirstSaveTooltip();
     }
-  }, [savedBlockId, dismissFirstSaveTooltip]);
+  }, [savedBlockId]);
 
   const handleDiscard = useCallback(() => {
     setAddedBlocks([]);
@@ -1314,8 +1309,8 @@ export default function Blocks() {
   return (
     <Frame>
       <Page
-        title="New Checkout Block"
-        backAction={{ content: "Blocks", onAction: () => navigate("/app") }}
+        title={blockName || "New Checkout Block"}
+        backAction={{ content: "Home", onAction: () => navigate("/app") }}
         actionGroups={[
           {
             title: "More actions",
@@ -1674,7 +1669,7 @@ export default function Blocks() {
                         </Box>
                       )}
                       <InlineStack gap="200" blockAlign="center">
-                        <Tooltip content="Copy Your Block ID">
+                        <Tooltip active content="Copy Your Block ID">
                           <Text
                             variant="headingMd"
                             fontWeight="medium"
