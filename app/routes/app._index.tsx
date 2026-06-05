@@ -276,10 +276,20 @@ export default function Index() {
                         <img
                           src={item.image}
                           alt={item.name}
-                          style={{ width: "100%", display: "block", objectFit: "cover" }}
+                          style={{
+                            width: "100%",
+                            display: "block",
+                            objectFit: "cover",
+                          }}
                         />
-                        <Box padding="400" borderColor="border" borderBlockStartWidth="025">
-                          <Text variant="headingMd" as="h3">{item.name}</Text>
+                        <Box
+                          padding="400"
+                          borderColor="border"
+                          borderBlockStartWidth="025"
+                        >
+                          <Text variant="headingMd" as="h3">
+                            {item.name}
+                          </Text>
                         </Box>
                       </div>
                     ))}
@@ -301,29 +311,50 @@ export default function Index() {
         </BlockStack>
 
         <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
-          {USE_CASES.map((uc) => (
+          <div style={{ height: "100%" }}>
             <MediaCard
-              key={uc.id}
-              title={uc.brand}
-              description={uc.description}
+              title="Feetly"
+              description="How Feetly increased average order value using upsell blocks at checkout"
               primaryAction={{
                 content: "View case study",
-                onAction: () => setActiveCaseStudyId(uc.id),
+                onAction: () => setActiveCaseStudyId("1"),
               }}
             >
               <img
-                src={uc.image}
-                alt={uc.brand}
+                src="/Example/example1.png"
+                alt="Feetly"
                 style={{
                   width: "100%",
-                  height: "100%",
+                  height: "200px",
                   objectFit: "cover",
                   objectPosition: "top",
                   display: "block",
                 }}
               />
             </MediaCard>
-          ))}
+          </div>
+          <div style={{ height: "100%" }}>
+            <MediaCard
+              title="Nuvita"
+              description="How Nuvita builds customer trust with social proof and payment badges"
+              primaryAction={{
+                content: "View case study",
+                onAction: () => setActiveCaseStudyId("2"),
+              }}
+            >
+              <img
+                src="/Example/example2.png"
+                alt="Nuvita"
+                style={{
+                  width: "100%",
+                  height: "200px",
+                  objectFit: "cover",
+                  objectPosition: "top",
+                  display: "block",
+                }}
+              />
+            </MediaCard>
+          </div>
         </InlineGrid>
 
         <Divider />
@@ -338,19 +369,31 @@ export default function Index() {
             { content: "Close", onAction: () => setActiveCaseStudyId(null) },
           ]}
         >
+          <Modal.Section flush>
+            <img
+              src={activeCaseStudy.image}
+              alt={activeCaseStudy.brand}
+              style={{
+                width: "100%",
+                display: "block",
+              }}
+            />
+          </Modal.Section>
           <Modal.Section>
             <BlockStack gap="400">
-              <img
-                src={activeCaseStudy.image}
-                alt={activeCaseStudy.brand}
-                style={{
-                  width: "100%",
-                  display: "block",
-                  borderRadius: "8px",
-                  objectFit: "cover",
-                }}
-              />
-              <Text variant="bodyMd" as="p">
+              <BlockStack gap="100">
+                <Text variant="bodySm" tone="subdued" as="p">
+                  Case Study
+                </Text>
+                <Text variant="headingMd" as="h2">
+                  {activeCaseStudy.brand}
+                </Text>
+              </BlockStack>
+              <Text variant="bodyMd" tone="subdued" as="p">
+                {activeCaseStudy.description}
+              </Text>
+              <Divider />
+              <Text variant="bodyMd" tone="subdued" as="p">
                 {activeCaseStudy.caseStudy}
               </Text>
             </BlockStack>
