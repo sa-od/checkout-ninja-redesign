@@ -7,5 +7,12 @@ declare namespace JSX {
       href?: string;
       target?: string;
     };
+    "ui-save-bar": React.HTMLAttributes<HTMLElement> & { id?: string };
+  }
+}
+
+declare module "react" {
+  interface ButtonHTMLAttributes<T> {
+    variant?: string;
   }
 }

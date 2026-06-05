@@ -38,7 +38,12 @@ import {
   EditIcon,
   LayoutColumns3Icon,
   ShieldCheckMarkIcon,
+  DragHandleIcon,
+  SettingsIcon,
+  ViewIcon,
+  DeleteIcon,
 } from "@shopify/polaris-icons";
+import { useAppBridge } from "@shopify/app-bridge-react";
 
 // ── Template browser data ─────────────────────────────────────────────────────
 
@@ -499,12 +504,16 @@ function BrowseTemplatesModal({
 
 // ── Choose Block Type modal ───────────────────────────────────────────────────
 
+type AddedBlock = { instanceId: number; id: number; name: string; category: string };
+
 function AddBlockModal({
   open,
   onClose,
+  onAdd,
 }: {
   open: boolean;
   onClose: () => void;
+  onAdd: (block: AddedBlock) => void;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -623,7 +632,14 @@ function AddBlockModal({
                       <Text variant="bodyMd" fontWeight="semibold" as="p">
                         {block.name}
                       </Text>
-                      <Button variant="primary" size="slim" onClick={onClose}>
+                      <Button
+                        variant="primary"
+                        size="slim"
+                        onClick={() => {
+                          onAdd({ instanceId: Date.now(), id: block.id, name: block.name, category: block.category });
+                          onClose();
+                        }}
+                      >
                         Add to checkout
                       </Button>
                     </div>
@@ -789,6 +805,7 @@ function Toggle({
 }
 
 export default function Blocks() {
+  const shopify = useAppBridge();
   const [blockName, setBlockName] = useState("");
   const [conditionalVisibility, setConditionalVisibility] = useState(false);
   const [status, setStatus] = useState("active");
@@ -798,13 +815,35 @@ export default function Blocks() {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [addBlockModalOpen, setAddBlockModalOpen] = useState(false);
   const [exportToastActive, setExportToastActive] = useState(false);
+  const [addedBlocks, setAddedBlocks] = useState<AddedBlock[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const isDirty = addedBlocks.length > 0 || blockName !== "";
+
+  useEffect(() => {
+    if (isDirty) {
+      shopify.saveBar.show("blocks-save-bar");
+    } else {
+      shopify.saveBar.hide("blocks-save-bar");
+    }
+  }, [isDirty]);
 
   useEffect(() => {
     if (searchParams.get("browse") === "1") {
       setTemplateModalOpen(true);
       setSearchParams({}, { replace: true });
     }
+  }, []);
+
+  const handleSave = useCallback(() => {
+    shopify.saveBar.hide("blocks-save-bar");
+  }, []);
+
+  const handleDiscard = useCallback(() => {
+    setAddedBlocks([]);
+    setBlockName("");
+    setConditionalVisibility(false);
+    shopify.saveBar.hide("blocks-save-bar");
   }, []);
 
   const handleStatusChange = useCallback(
@@ -821,13 +860,6 @@ export default function Blocks() {
       <Page
         title="New Checkout Block"
         backAction={{ content: "Blocks", url: "/app" }}
-        secondaryActions={[
-          {
-            content: "Browse Templates",
-            icon: SearchIcon,
-            onAction: () => setTemplateModalOpen(true),
-          },
-        ]}
         actionGroups={[
           {
             title: "More actions",
@@ -841,234 +873,281 @@ export default function Blocks() {
           },
         ]}
       >
-      <BlockStack gap="500">
-        {/* ── Start with a Template (full-width) ── */}
-        <Card>
-          <InlineStack align="space-between" blockAlign="center" gap="400">
-            <BlockStack gap="100">
-              <Text variant="headingMd" as="h3">
-                Start with a Template
-              </Text>
-              <Text variant="bodyMd" tone="subdued" as="p">
-                Browse our pre-configured templates to get started quickly, or
-                start from scratch.
-              </Text>
-            </BlockStack>
-            <Button
-              variant="primary"
-              icon={SearchIcon}
-              onClick={() => setTemplateModalOpen(true)}
-            >
-              Browse Templates
-            </Button>
-          </InlineStack>
-        </Card>
+        <BlockStack gap="500">
+          {/* ── Start with a Template (full-width) ── */}
+          <Card>
+            <InlineStack align="space-between" blockAlign="center" gap="400">
+              <BlockStack gap="100">
+                <Text variant="headingMd" as="h3">
+                  Start with a Template
+                </Text>
+                <Text variant="bodyMd" tone="subdued" as="p">
+                  Browse our pre-configured templates to get started quickly, or
+                  start from scratch.
+                </Text>
+              </BlockStack>
+              <Button
+                variant="primary"
+                icon={SearchIcon}
+                onClick={() => setTemplateModalOpen(true)}
+              >
+                Browse Templates
+              </Button>
+            </InlineStack>
+          </Card>
 
-        {/* ── Two-column layout ── */}
-        <Layout>
-          {/* Left column */}
-          <Layout.Section>
-            <BlockStack gap="400">
-              {/* Block Name */}
-              <Card>
-                <TextField
-                  label="Block Name"
-                  value={blockName}
-                  onChange={setBlockName}
-                  helpText="This will not displayed in checkout page, for reference purpose only."
-                  autoComplete="off"
-                />
-              </Card>
+          {/* ── Two-column layout ── */}
+          <Layout>
+            {/* Left column */}
+            <Layout.Section>
+              <BlockStack gap="400">
+                {/* Block Name */}
+                <Card>
+                  <TextField
+                    label="Block Name"
+                    value={blockName}
+                    onChange={setBlockName}
+                    helpText="This will not displayed in checkout page, for reference purpose only."
+                    autoComplete="off"
+                  />
+                </Card>
 
-              {/* Conditional block visibility */}
-              <Card>
-                <BlockStack gap="200">
-                  <InlineStack gap="400" blockAlign="start" wrap={false}>
-                    <Toggle
-                      checked={conditionalVisibility}
-                      onChange={setConditionalVisibility}
-                    />
-                    <BlockStack gap="100">
-                      <Text variant="bodyMd" fontWeight="semibold" as="p">
-                        Enable conditional block visibility
-                      </Text>
-                    </BlockStack>
-                  </InlineStack>
-                  <Text variant="bodyMd" tone="subdued" as="p">
-                    When enabled, blocks will only appear when your specified
-                    conditions are met. When disabled, blocks are always
-                    visible.
-                  </Text>
-                </BlockStack>
-              </Card>
+                {/* Conditional block visibility */}
+                <Card>
+                  <BlockStack gap="200">
+                    <InlineStack gap="400" blockAlign="start" wrap={false}>
+                      <Toggle
+                        checked={conditionalVisibility}
+                        onChange={setConditionalVisibility}
+                      />
+                      <BlockStack gap="100">
+                        <Text variant="bodyMd" fontWeight="semibold" as="p">
+                          Enable conditional block visibility
+                        </Text>
+                      </BlockStack>
+                    </InlineStack>
+                    <Text variant="bodyMd" tone="subdued" as="p">
+                      When enabled, blocks will only appear when your specified
+                      conditions are met. When disabled, blocks are always
+                      visible.
+                    </Text>
+                  </BlockStack>
+                </Card>
 
-              {/* Checkout Blocks */}
-              <Card>
-                <BlockStack gap="400">
-                  {/* Header row */}
-                  <InlineStack align="space-between" blockAlign="center">
-                    <BlockStack gap="050">
-                      <Text variant="headingMd" as="h3">
-                        Checkout Blocks
-                      </Text>
-                      <Text variant="bodyMd" tone="subdued" as="p">
-                        Manage your checkout blocks
-                      </Text>
-                    </BlockStack>
-                    <InlineStack gap="200">
-                      <Button
-                        variant="primary"
-                        onClick={() => setAddBlockModalOpen(true)}
+                {/* Checkout Blocks */}
+                <Card>
+                  <BlockStack gap="400">
+                    {/* Header row */}
+                    <InlineStack align="space-between" blockAlign="center">
+                      <BlockStack gap="050">
+                        <Text variant="headingMd" as="h3">
+                          Checkout Blocks
+                        </Text>
+                        <Text variant="bodyMd" tone="subdued" as="p">
+                          Manage your checkout blocks
+                        </Text>
+                      </BlockStack>
+                      <InlineStack gap="200">
+                        <Button
+                          variant="primary"
+                          onClick={() => setAddBlockModalOpen(true)}
+                        >
+                          + Add block
+                        </Button>
+                        <Popover
+                          active={menuOpen}
+                          activator={
+                            <Button
+                              icon={MenuHorizontalIcon}
+                              variant="tertiary"
+                              onClick={() => setMenuOpen((o) => !o)}
+                              accessibilityLabel="More actions"
+                            />
+                          }
+                          onClose={() => setMenuOpen(false)}
+                        >
+                          <ActionList
+                            actionRole="menuitem"
+                            items={[
+                              {
+                                content: "Import blocks",
+                                icon: ImportIcon,
+                                onAction: () => {
+                                  setMenuOpen(false);
+                                  setImportModalOpen(true);
+                                },
+                              },
+                              {
+                                content: "Export blocks",
+                                icon: ExportIcon,
+                                onAction: () => {
+                                  setMenuOpen(false);
+                                  setExportToastActive(true);
+                                },
+                              },
+                            ]}
+                          />
+                        </Popover>
+                      </InlineStack>
+                    </InlineStack>
+
+                    {/* Block list / empty state */}
+                    {addedBlocks.length === 0 ? (
+                      <div
+                        style={{
+                          border: "1px solid var(--p-color-border)",
+                          borderRadius: "var(--p-border-radius-200)",
+                          background: "var(--p-color-bg-surface-secondary)",
+                          minHeight: "80px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "24px",
+                        }}
                       >
+                        <Text variant="bodyMd" tone="subdued" as="p">
+                          No blocks added yet
+                        </Text>
+                      </div>
+                    ) : (
+                      <BlockStack gap="200">
+                        {addedBlocks.map((block) => (
+                          <div
+                            key={block.instanceId}
+                            style={{
+                              border: "1px solid var(--p-color-border)",
+                              borderRadius: "var(--p-border-radius-200)",
+                              padding: "var(--p-space-300) var(--p-space-400)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "var(--p-space-300)",
+                              background: "var(--p-color-bg-surface)",
+                            }}
+                          >
+                            <Icon source={DragHandleIcon} tone="subdued" />
+                            <Badge>{block.name.toLowerCase().replace(/\s+/g, "_")}</Badge>
+                            <Text variant="bodyMd" fontWeight="semibold" as="span">
+                              {block.name}
+                            </Text>
+                            <div style={{ flex: 1 }} />
+                            <Badge tone="success">Active</Badge>
+                            <Button icon={SettingsIcon} variant="tertiary" size="slim" accessibilityLabel="Settings" />
+                            <Button icon={ViewIcon} variant="tertiary" size="slim" accessibilityLabel="Preview" />
+                            <Button
+                              icon={DeleteIcon}
+                              variant="tertiary"
+                              size="slim"
+                              tone="critical"
+                              accessibilityLabel="Delete"
+                              onClick={() =>
+                                setAddedBlocks((prev) =>
+                                  prev.filter((b) => b.instanceId !== block.instanceId),
+                                )
+                              }
+                            />
+                          </div>
+                        ))}
+                      </BlockStack>
+                    )}
+
+                    <Divider />
+
+                    <InlineStack align="center">
+                      <Button onClick={() => setAddBlockModalOpen(true)}>
                         + Add block
                       </Button>
-                      <Popover
-                        active={menuOpen}
-                        activator={
-                          <Button
-                            icon={MenuHorizontalIcon}
-                            variant="tertiary"
-                            onClick={() => setMenuOpen((o) => !o)}
-                            accessibilityLabel="More actions"
-                          />
-                        }
-                        onClose={() => setMenuOpen(false)}
-                      >
-                        <ActionList
-                          actionRole="menuitem"
-                          items={[
-                            {
-                              content: "Import blocks",
-                              icon: ImportIcon,
-                              onAction: () => {
-                                setMenuOpen(false);
-                                setImportModalOpen(true);
-                              },
-                            },
-                            {
-                              content: "Export blocks",
-                              icon: ExportIcon,
-                              onAction: () => {
-                                setMenuOpen(false);
-                                setExportToastActive(true);
-                              },
-                            },
-                          ]}
-                        />
-                      </Popover>
                     </InlineStack>
-                  </InlineStack>
+                  </BlockStack>
+                </Card>
+              </BlockStack>
+            </Layout.Section>
 
-                  {/* Empty state area */}
-                  <div
-                    style={{
-                      border: "1px solid #e1e3e5",
-                      borderRadius: "8px",
-                      background: "#f6f6f7",
-                      minHeight: "80px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: "24px",
-                    }}
-                  >
-                    <Text variant="bodyMd" tone="subdued" as="p">
-                      No blocks added yet
+            {/* Right sidebar */}
+            <Layout.Section variant="oneThird">
+              <BlockStack gap="400">
+                {/* Status */}
+                <Card>
+                  <BlockStack gap="300">
+                    <Text variant="headingMd" as="h3">
+                      Status
                     </Text>
-                  </div>
+                    <Select
+                      label="Status"
+                      labelHidden
+                      options={[
+                        { label: "Active", value: "active" },
+                        { label: "Draft", value: "draft" },
+                      ]}
+                      value={status}
+                      onChange={handleStatusChange}
+                    />
+                  </BlockStack>
+                </Card>
 
-                  <Divider />
+                {/* Block Details */}
+                <Card>
+                  <BlockStack gap="300">
+                    <Text variant="headingMd" as="h3">
+                      Block Details
+                    </Text>
+                    <Text variant="bodyMd" tone="subdued" as="p">
+                      Copy this ID and paste it in the content block to use it
+                      in the checkout page
+                    </Text>
+                    <Button>Open Checkout Editor</Button>
+                  </BlockStack>
+                </Card>
 
-                  <InlineStack align="center">
-                    <Button onClick={() => setAddBlockModalOpen(true)}>
-                      + Add block
-                    </Button>
-                  </InlineStack>
-                </BlockStack>
-              </Card>
-            </BlockStack>
-          </Layout.Section>
+                {/* Block Styles */}
+                <Card>
+                  <BlockStack gap="300">
+                    <Text variant="headingMd" as="h3">
+                      Block Styles
+                    </Text>
+                    <Select
+                      label="Layout Type"
+                      options={[
+                        { label: "Horizontal", value: "horizontal" },
+                        { label: "Vertical", value: "vertical" },
+                      ]}
+                      value={layoutType}
+                      onChange={handleLayoutChange}
+                    />
+                  </BlockStack>
+                </Card>
+              </BlockStack>
+            </Layout.Section>
+          </Layout>
+        </BlockStack>
 
-          {/* Right sidebar */}
-          <Layout.Section variant="oneThird">
-            <BlockStack gap="400">
-              {/* Status */}
-              <Card>
-                <BlockStack gap="300">
-                  <Text variant="headingMd" as="h3">
-                    Status
-                  </Text>
-                  <Select
-                    label="Status"
-                    labelHidden
-                    options={[
-                      { label: "Active", value: "active" },
-                      { label: "Draft", value: "draft" },
-                    ]}
-                    value={status}
-                    onChange={handleStatusChange}
-                  />
-                </BlockStack>
-              </Card>
-
-              {/* Block Details */}
-              <Card>
-                <BlockStack gap="300">
-                  <Text variant="headingMd" as="h3">
-                    Block Details
-                  </Text>
-                  <Text variant="bodyMd" tone="subdued" as="p">
-                    Copy this ID and paste it in the content block to use it in
-                    the checkout page
-                  </Text>
-                  <Button>Open Checkout Editor</Button>
-                </BlockStack>
-              </Card>
-
-              {/* Block Styles */}
-              <Card>
-                <BlockStack gap="300">
-                  <Text variant="headingMd" as="h3">
-                    Block Styles
-                  </Text>
-                  <Select
-                    label="Layout Type"
-                    options={[
-                      { label: "Horizontal", value: "horizontal" },
-                      { label: "Vertical", value: "vertical" },
-                    ]}
-                    value={layoutType}
-                    onChange={handleLayoutChange}
-                  />
-                </BlockStack>
-              </Card>
-            </BlockStack>
-          </Layout.Section>
-        </Layout>
-      </BlockStack>
-
-      <BrowseTemplatesModal
-        open={templateModalOpen}
-        onClose={() => setTemplateModalOpen(false)}
-      />
-
-      <ImportModal
-        open={importModalOpen}
-        onClose={() => setImportModalOpen(false)}
-      />
-
-      <AddBlockModal
-        open={addBlockModalOpen}
-        onClose={() => setAddBlockModalOpen(false)}
-      />
-
-      {exportToastActive && (
-        <Toast
-          content="Downloading..."
-          onDismiss={() => setExportToastActive(false)}
+        <BrowseTemplatesModal
+          open={templateModalOpen}
+          onClose={() => setTemplateModalOpen(false)}
         />
-      )}
-    </Page>
+
+        <ImportModal
+          open={importModalOpen}
+          onClose={() => setImportModalOpen(false)}
+        />
+
+        <AddBlockModal
+          open={addBlockModalOpen}
+          onClose={() => setAddBlockModalOpen(false)}
+          onAdd={(block) => setAddedBlocks((prev) => [...prev, block])}
+        />
+
+        {exportToastActive && (
+          <Toast
+            content="Downloading..."
+            onDismiss={() => setExportToastActive(false)}
+          />
+        )}
+      </Page>
+
+      <ui-save-bar id="blocks-save-bar">
+        <button variant="primary" onClick={handleSave}>Save</button>
+        <button onClick={handleDiscard}>Discard</button>
+      </ui-save-bar>
     </Frame>
   );
 }

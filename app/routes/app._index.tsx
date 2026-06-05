@@ -78,12 +78,17 @@ const USE_CASES = [
 export default function Index() {
   const navigate = useNavigate();
   const goToCreateBlock = () => navigate("/app/blocks?browse=1");
-  const [activeCaseStudyId, setActiveCaseStudyId] = useState<string | null>(null);
+  const [activeCaseStudyId, setActiveCaseStudyId] = useState<string | null>(
+    null,
+  );
   const [showArrows, setShowArrows] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
   const scrollCarousel = (dir: "left" | "right") => {
-    carouselRef.current?.scrollBy({ left: dir === "left" ? -260 : 260, behavior: "smooth" });
+    carouselRef.current?.scrollBy({
+      left: dir === "left" ? -260 : 260,
+      behavior: "smooth",
+    });
   };
 
   const activeCaseStudy =
@@ -138,7 +143,7 @@ export default function Index() {
 
         {/* ── Templates carousel ── */}
         <Text variant="headingMd" as="h2">
-          Ready-to-use templates
+          Start with a template
         </Text>
         <Card>
           <BlockStack gap="400">
@@ -219,51 +224,51 @@ export default function Index() {
                   scrollSnapType: "x mandatory",
                 }}
               >
-              {TEMPLATES.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    minWidth: "220px",
-                    flex: "0 0 auto",
-                    border: "1px solid var(--p-color-border)",
-                    borderRadius: "var(--p-border-radius-300)",
-                    overflow: "hidden",
-                    background: "var(--p-color-bg-surface)",
-                    display: "flex",
-                    flexDirection: "column",
-                    scrollSnapAlign: "start",
-                  }}
-                >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    style={{
-                      width: "100%",
-                      height: "150px",
-                      display: "block",
-                      objectFit: "cover",
-                    }}
-                  />
+                {TEMPLATES.map((item) => (
                   <div
+                    key={item.id}
                     style={{
-                      flex: 1,
+                      minWidth: "220px",
+                      flex: "0 0 auto",
+                      border: "1px solid var(--p-color-border)",
+                      borderRadius: "var(--p-border-radius-300)",
+                      overflow: "hidden",
+                      background: "var(--p-color-bg-surface)",
                       display: "flex",
                       flexDirection: "column",
-                      justifyContent: "space-between",
-                      padding: "var(--p-space-400)",
-                      borderTop: "1px solid var(--p-color-border)",
-                      gap: "var(--p-space-300)",
+                      scrollSnapAlign: "start",
                     }}
                   >
-                    <Text variant="headingSm" as="h3">
-                      {item.name}
-                    </Text>
-                    <Button variant="primary" size="slim">
-                      Use Template
-                    </Button>
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      style={{
+                        width: "100%",
+                        height: "150px",
+                        display: "block",
+                        objectFit: "cover",
+                      }}
+                    />
+                    <div
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        padding: "var(--p-space-400)",
+                        borderTop: "1px solid var(--p-color-border)",
+                        gap: "var(--p-space-300)",
+                      }}
+                    >
+                      <Text variant="headingSm" as="h3">
+                        {item.name}
+                      </Text>
+                      <Button variant="primary" size="slim">
+                        Use Template
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
               </div>
             </div>
             <InlineStack align="end">
