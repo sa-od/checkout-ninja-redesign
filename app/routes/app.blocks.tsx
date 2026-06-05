@@ -316,9 +316,11 @@ const BLOCKS_DATA = [
 function BrowseTemplatesModal({
   open,
   onClose,
+  onSelect,
 }: {
   open: boolean;
   onClose: () => void;
+  onSelect: (template: { id: number; name: string; category: string }) => void;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -472,7 +474,10 @@ function BrowseTemplatesModal({
                           <Button
                             variant="primary"
                             size="slim"
-                            onClick={onClose}
+                            onClick={() => {
+                              onSelect({ id: t.id, name: t.name, category: t.category });
+                              onClose();
+                            }}
                           >
                             Use Template
                           </Button>
@@ -1123,6 +1128,13 @@ export default function Blocks() {
         <BrowseTemplatesModal
           open={templateModalOpen}
           onClose={() => setTemplateModalOpen(false)}
+          onSelect={(template) => {
+            setBlockName(template.name);
+            setAddedBlocks((prev) => [
+              ...prev,
+              { instanceId: Date.now(), id: template.id, name: template.name, category: template.category },
+            ]);
+          }}
         />
 
         <ImportModal
