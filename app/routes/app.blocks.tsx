@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
+import { useSearchParams } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import {
@@ -797,6 +798,14 @@ export default function Blocks() {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [addBlockModalOpen, setAddBlockModalOpen] = useState(false);
   const [exportToastActive, setExportToastActive] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("browse") === "1") {
+      setTemplateModalOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
 
   const handleStatusChange = useCallback(
     (value: string) => setStatus(value),

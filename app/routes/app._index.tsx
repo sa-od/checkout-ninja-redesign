@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
+import { useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import {
@@ -75,6 +76,8 @@ const USE_CASES = [
 ];
 
 export default function Index() {
+  const navigate = useNavigate();
+  const goToCreateBlock = () => navigate("/app/blocks?browse=1");
   const [activeCaseStudyId, setActiveCaseStudyId] = useState<string | null>(null);
   const [showArrows, setShowArrows] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -89,17 +92,17 @@ export default function Index() {
   return (
     <Page
       title="Checkout Blocks"
-      primaryAction={{ content: "+ Create block", onAction: () => {} }}
+      primaryAction={{ content: "+ Create block", onAction: goToCreateBlock }}
     >
       <BlockStack gap="600">
         {/* ── Empty state ── */}
         <Card padding="0">
           <EmptyState
             heading="No checkout blocks yet"
-            action={{ content: "+ Create block", onAction: () => {} }}
+            action={{ content: "+ Create block", onAction: goToCreateBlock }}
             // secondaryAction={{
             //   content: "Browse templates",
-            //   onAction: () => {},
+            //   onAction: goToCreateBlock,
             // }}
             image="/empty-state.png"
             imageContained
@@ -134,13 +137,11 @@ export default function Index() {
         </Card>
 
         {/* ── Templates carousel ── */}
+        <Text variant="headingMd" as="h2">
+          Ready-to-use templates
+        </Text>
         <Card>
           <BlockStack gap="400">
-            <InlineStack align="space-between" blockAlign="center">
-              <Text variant="headingMd" as="h2">
-                Start with a template
-              </Text>
-            </InlineStack>
             <div
               style={{ position: "relative" }}
               onMouseEnter={() => setShowArrows(true)}
