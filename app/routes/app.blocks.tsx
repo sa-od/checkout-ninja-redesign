@@ -27,6 +27,7 @@ import {
   Link,
   Frame,
   Toast,
+  Tooltip,
 } from "@shopify/polaris";
 import type { BadgeProps } from "@shopify/polaris";
 import {
@@ -46,6 +47,9 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
   ClipboardIcon,
+  ExternalIcon,
+  XSmallIcon,
+  PlanFilledIcon,
 } from "@shopify/polaris-icons";
 import { useAppBridge } from "@shopify/app-bridge-react";
 
@@ -906,6 +910,7 @@ export default function Blocks() {
   const [saveToastActive, setSaveToastActive] = useState(false);
   const [savedBlockId, setSavedBlockId] = useState<string | null>(null);
   const [copyToastActive, setCopyToastActive] = useState(false);
+  const [showFirstSaveTooltip, setShowFirstSaveTooltip] = useState(false);
   const [addedBlocks, setAddedBlocks] = useState<AddedBlock[]>([]);
   const [conditions, setConditions] = useState<
     { id: number; value: string; extras: Record<string, string> }[]
@@ -1250,18 +1255,23 @@ export default function Blocks() {
     }
   }, []);
 
+  const dismissFirstSaveTooltip = useCallback(() => {
+    setShowFirstSaveTooltip(false);
+  }, []);
+
   const handleSave = useCallback(() => {
     setSavedBlockId(String(Date.now()));
     shopify.saveBar.hide("blocks-save-bar");
-    setSaveToastActive(true);
+    setShowFirstSaveTooltip(true);
   }, []);
 
   const handleCopyId = useCallback(() => {
     if (savedBlockId) {
       navigator.clipboard.writeText(savedBlockId);
       setCopyToastActive(true);
+      dismissFirstSaveTooltip();
     }
-  }, [savedBlockId]);
+  }, [savedBlockId, dismissFirstSaveTooltip]);
 
   const handleDiscard = useCallback(() => {
     setAddedBlocks([]);
@@ -1603,20 +1613,64 @@ export default function Blocks() {
                 </Card>
 
                 {/* Block Details */}
-                <Card>
-                  <BlockStack gap="300">
-                    <Text variant="headingMd" as="h3">
-                      Block Details
-                    </Text>
-                    <Text variant="bodyMd" tone="subdued" as="p">
-                      Copy this ID and paste it in the content block to use it
-                      in the checkout page
-                    </Text>
-                    {savedBlockId && (
+                {savedBlockId ? (
+                  <Card>
+                    <BlockStack gap="300">
+                      {showFirstSaveTooltip && (
+                        <Box
+                          background="bg-surface-secondary"
+                          borderRadius="200"
+                          padding="300"
+                        >
+                          <BlockStack gap="200">
+                            <InlineStack
+                              align="space-between"
+                              blockAlign="start"
+                            >
+                              <InlineStack gap="150" blockAlign="center">
+                                <Icon source={PlanFilledIcon} tone="success" />
+                                <Text
+                                  variant="bodySm"
+                                  fontWeight="semibold"
+                                  as="p"
+                                >
+                                  Final step
+                                </Text>
+                              </InlineStack>
+                              <Button
+                                icon={XSmallIcon}
+                                variant="tertiary"
+                                size="slim"
+                                accessibilityLabel="Dismiss"
+                                onClick={dismissFirstSaveTooltip}
+                              />
+                            </InlineStack>
+                            <Text variant="bodySm" tone="subdued" as="p">
+                              Copy this Block ID and paste it into your Checkout
+                              Editor to make the block live.
+                            </Text>
+                          </BlockStack>
+                        </Box>
+                      )}
+                      <Text variant="headingSm" as="h3">
+                        Block Details
+                      </Text>
+                      <Text variant="bodyMd" tone="subdued" as="p">
+                        Your block is saved. Copy the Block ID below and paste
+                        it into your Checkout Editor where you want the block to
+                        appear.
+                      </Text>
                       <InlineStack gap="200" blockAlign="center">
-                        <Text variant="headingMd" as="p" fontWeight="bold">
-                          {savedBlockId}
-                        </Text>
+                        <Tooltip active content="Copy Your Block ID">
+                          <Text
+                            variant="headingMd"
+                            fontWeight="medium"
+                            tone="success"
+                            as="p"
+                          >
+                            {savedBlockId}
+                          </Text>
+                        </Tooltip>
                         <Button
                           icon={ClipboardIcon}
                           variant="tertiary"
@@ -1625,10 +1679,30 @@ export default function Blocks() {
                           onClick={handleCopyId}
                         />
                       </InlineStack>
-                    )}
-                    <Button>Open Checkout Editor</Button>
-                  </BlockStack>
-                </Card>
+                      <Button
+                        variant="primary"
+                        icon={ExternalIcon}
+                        onClick={dismissFirstSaveTooltip}
+                      >
+                        Open Checkout Editor
+                      </Button>
+                    </BlockStack>
+                  </Card>
+                ) : (
+                  <Card>
+                    <BlockStack gap="300">
+                      <Text variant="headingSm" as="h3">
+                        Block Details
+                      </Text>
+                      <Text variant="bodyMd" tone="subdued" as="p">
+                        Save your block to get a Block ID. You'll need to paste
+                        this ID into your Checkout Editor to make the block
+                        appear at checkout.
+                      </Text>
+                      <Button disabled>Open Checkout Editor</Button>
+                    </BlockStack>
+                  </Card>
+                )}
 
                 {/* Block Styles */}
                 <Card>
