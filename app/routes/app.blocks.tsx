@@ -1673,23 +1673,17 @@ export default function Blocks() {
                           </BlockStack>
                         </Box>
                       )}
-                      <Text variant="headingSm" as="h3">
-                        Block Details
-                      </Text>
-                      <Text variant="bodyMd" tone="subdued" as="p">
-                        Your block is saved. Copy the Block ID below and paste
-                        it into your Checkout Editor where you want the block to
-                        appear.
-                      </Text>
                       <InlineStack gap="200" blockAlign="center">
-                        <Tooltip active content="Copy Your Block ID">
+                        <Tooltip content="Copy Your Block ID">
                           <Text
                             variant="headingMd"
                             fontWeight="medium"
                             tone="success"
                             as="p"
                           >
-                            {savedBlockId}
+                            <span style={{ fontFamily: "var(--p-font-family-mono)" }}>
+                              {savedBlockId}
+                            </span>
                           </Text>
                         </Tooltip>
                         <Button
