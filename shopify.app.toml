@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "752533e9d915d330ace36f8f02ce6a9e"
-name = "checkout-ninja"
+name = "Checkout Ninja"
 application_url = "https://example.com"
 embedded = true
 
