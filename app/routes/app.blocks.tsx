@@ -429,12 +429,14 @@ function BrowseTemplatesModal({
               <div
                 key={cat.id}
                 style={{
-                  borderLeft: activeCategory === cat.id
-                    ? "3px solid var(--p-color-text)"
-                    : "3px solid transparent",
-                  background: activeCategory === cat.id
-                    ? "var(--p-color-bg-surface-secondary)"
-                    : "transparent",
+                  borderLeft:
+                    activeCategory === cat.id
+                      ? "3px solid var(--p-color-text)"
+                      : "3px solid transparent",
+                  background:
+                    activeCategory === cat.id
+                      ? "var(--p-color-bg-surface-secondary)"
+                      : "transparent",
                 }}
               >
                 <Button
@@ -847,6 +849,220 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return null;
 };
 
+// ── Block Edit modal ──────────────────────────────────────────────────────────
+
+function BlockEditModal({
+  block,
+  onClose,
+}: {
+  block: AddedBlock | null;
+  onClose: () => void;
+}) {
+  const [threshold, setThreshold] = useState("300");
+  const [messageInProgress, setMessageInProgress] = useState(
+    "Add {remaining} more to get free shipping!",
+  );
+  const [messageCompleted, setMessageCompleted] = useState(
+    "You qualify for free shipping!",
+  );
+  const [barColor, setBarColor] = useState("critical");
+  const [barSize, setBarSize] = useState("large");
+  const [textSize, setTextSize] = useState("base");
+  const [background, setBackground] = useState("base");
+  const [border, setBorder] = useState("dotted");
+  const [borderRadius, setBorderRadius] = useState("large");
+  const [padding, setPadding] = useState("tight");
+  const [spacing, setSpacing] = useState("tight");
+
+  if (!block) return null;
+
+  const typeSlug = block.name.toLowerCase().replace(/\s+/g, "_");
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={`Edit - ${block.name}`}
+      size="large"
+      primaryAction={{ content: "Done", onAction: onClose }}
+    >
+      <Modal.Section flush>
+        <div style={{ display: "flex", height: "560px" }}>
+          {/* ── Left: configuration ── */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+            <BlockStack gap="500">
+              <InlineStack gap="200">
+                <Badge>{typeSlug}</Badge>
+                <Badge tone={block.active ? "success" : "critical"}>
+                  {block.active ? "Active" : "Inactive"}
+                </Badge>
+              </InlineStack>
+
+              <BlockStack gap="300">
+                <Text variant="headingMd" as="h3">
+                  Configuration
+                </Text>
+                <TextField
+                  label="Free Shipping Threshold"
+                  value={threshold}
+                  onChange={setThreshold}
+                  type="number"
+                  helpText="The minimum order amount to qualify for free shipping (in store currency)"
+                  autoComplete="off"
+                />
+                <TextField
+                  label="Message (In Progress)"
+                  value={messageInProgress}
+                  onChange={setMessageInProgress}
+                  helpText="Use {remaining} for the remaining amount, {current} for current total, {threshold} for the free shipping threshold"
+                  autoComplete="off"
+                />
+                <TextField
+                  label="Message (Completed)"
+                  value={messageCompleted}
+                  onChange={setMessageCompleted}
+                  helpText="Message shown when the threshold is reached"
+                  autoComplete="off"
+                />
+              </BlockStack>
+
+              <BlockStack gap="300">
+                <Text variant="headingMd" as="h3">
+                  Appearance
+                </Text>
+                <InlineGrid columns={3} gap="300">
+                  <Select
+                    label="Progress Bar Color"
+                    options={["Critical", "Info", "Success", "Warning"].map(
+                      (v) => ({ label: v, value: v.toLowerCase() }),
+                    )}
+                    value={barColor}
+                    onChange={setBarColor}
+                  />
+                  <Select
+                    label="Progress Bar Size"
+                    options={["Small", "Medium", "Large"].map((v) => ({
+                      label: v,
+                      value: v.toLowerCase(),
+                    }))}
+                    value={barSize}
+                    onChange={setBarSize}
+                  />
+                  <Select
+                    label="Text Size"
+                    options={["Small", "Base", "Large"].map((v) => ({
+                      label: v,
+                      value: v.toLowerCase(),
+                    }))}
+                    value={textSize}
+                    onChange={setTextSize}
+                  />
+                </InlineGrid>
+              </BlockStack>
+
+              <BlockStack gap="300">
+                <Text variant="headingMd" as="h3">
+                  Advanced Styling
+                </Text>
+                <InlineGrid columns={3} gap="300">
+                  <Select
+                    label="Background"
+                    options={["Base", "Surface", "Secondary"].map((v) => ({
+                      label: v,
+                      value: v.toLowerCase(),
+                    }))}
+                    value={background}
+                    onChange={setBackground}
+                  />
+                  <Select
+                    label="Border"
+                    options={["None", "Solid", "Dotted", "Dashed"].map((v) => ({
+                      label: v,
+                      value: v.toLowerCase(),
+                    }))}
+                    value={border}
+                    onChange={setBorder}
+                  />
+                  <Select
+                    label="Border Radius"
+                    options={["None", "Small", "Medium", "Large"].map((v) => ({
+                      label: v,
+                      value: v.toLowerCase(),
+                    }))}
+                    value={borderRadius}
+                    onChange={setBorderRadius}
+                  />
+                </InlineGrid>
+                <InlineGrid columns={2} gap="300">
+                  <Select
+                    label="Padding"
+                    options={["None", "Tight", "Base", "Loose"].map((v) => ({
+                      label: v,
+                      value: v.toLowerCase(),
+                    }))}
+                    value={padding}
+                    onChange={setPadding}
+                  />
+                  <Select
+                    label="Element Spacing"
+                    options={["None", "Tight", "Base", "Loose"].map((v) => ({
+                      label: v,
+                      value: v.toLowerCase(),
+                    }))}
+                    value={spacing}
+                    onChange={setSpacing}
+                  />
+                </InlineGrid>
+              </BlockStack>
+            </BlockStack>
+          </div>
+
+          {/* ── Right: preview ── */}
+          <div
+            style={{
+              width: "340px",
+              flexShrink: 0,
+              borderLeft: "1px solid var(--p-color-border)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div
+              style={{
+                padding: "16px 20px",
+                borderBottom: "1px solid var(--p-color-border)",
+              }}
+            >
+              <Text variant="headingMd" as="h3">
+                Preview
+              </Text>
+            </div>
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "24px",
+                background: "var(--p-color-bg-surface-secondary)",
+                gap: "8px",
+              }}
+            >
+              <Text variant="bodyMd" tone="subdued" as="p" alignment="center">
+                Preview not available for this block type.
+              </Text>
+              <Text variant="bodySm" tone="subdued" as="p" alignment="center">
+                Block Type: {typeSlug}
+              </Text>
+            </div>
+          </div>
+        </div>
+      </Modal.Section>
+    </Modal>
+  );
+}
+
 function Toggle({
   checked,
   onChange,
@@ -902,6 +1118,7 @@ export default function Blocks() {
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [addBlockModalOpen, setAddBlockModalOpen] = useState(false);
+  const [editingBlock, setEditingBlock] = useState<AddedBlock | null>(null);
   const [exportToastActive, setExportToastActive] = useState(false);
   const [saveToastActive, setSaveToastActive] = useState(false);
   const [savedBlockId, setSavedBlockId] = useState<string | null>(null);
@@ -1557,6 +1774,7 @@ export default function Blocks() {
                               variant="tertiary"
                               size="slim"
                               accessibilityLabel="Settings"
+                              onClick={() => setEditingBlock(block)}
                             />
                             <Button
                               icon={block.active ? ViewIcon : HideIcon}
@@ -1629,45 +1847,50 @@ export default function Blocks() {
                 </Card>
 
                 {/* Block Details */}
-                {savedBlockId ? (
-                  <Card>
-                    <BlockStack gap="300">
-                      {showFirstSaveTooltip && (
-                        <Box
-                          background="bg-surface-secondary"
-                          borderRadius="200"
-                          padding="300"
-                        >
-                          <BlockStack gap="200">
-                            <InlineStack
-                              align="space-between"
-                              blockAlign="start"
-                            >
-                              <InlineStack gap="150" blockAlign="center">
-                                <Icon source={PlanFilledIcon} tone="success" />
-                                <Text
-                                  variant="bodySm"
-                                  fontWeight="semibold"
-                                  as="p"
-                                >
-                                  Final step
-                                </Text>
-                              </InlineStack>
-                              <Button
-                                icon={XSmallIcon}
-                                variant="tertiary"
-                                size="slim"
-                                accessibilityLabel="Dismiss"
-                                onClick={dismissFirstSaveTooltip}
-                              />
+                <Card>
+                  <BlockStack gap="300">
+                    {savedBlockId && showFirstSaveTooltip && (
+                      <Box
+                        background="bg-surface-secondary"
+                        borderRadius="200"
+                        padding="300"
+                      >
+                        <BlockStack gap="200">
+                          <InlineStack align="space-between" blockAlign="start">
+                            <InlineStack gap="150" blockAlign="center">
+                              <Icon source={PlanFilledIcon} tone="success" />
+                              <Text
+                                variant="bodySm"
+                                fontWeight="semibold"
+                                as="p"
+                              >
+                                Last Step
+                              </Text>
                             </InlineStack>
-                            <Text variant="bodySm" tone="subdued" as="p">
-                              Copy this Block ID and paste it into your Checkout
-                              Editor to make the block live.
-                            </Text>
-                          </BlockStack>
-                        </Box>
-                      )}
+                            <Button
+                              icon={XSmallIcon}
+                              variant="tertiary"
+                              size="slim"
+                              accessibilityLabel="Dismiss"
+                              onClick={dismissFirstSaveTooltip}
+                            />
+                          </InlineStack>
+                          <Text variant="bodySm" tone="subdued" as="p">
+                            Open the Checkout Editor, select a placement, and
+                            paste your Block ID to activate it for shoppers.
+                          </Text>
+                        </BlockStack>
+                      </Box>
+                    )}
+                    <Text variant="headingSm" as="h3">
+                      Block Details
+                    </Text>
+                    <Text variant="bodyMd" tone="subdued" as="p">
+                      {savedBlockId
+                        ? "Your block is saved and ready to deploy."
+                        : "After saving, you'll receive a unique Block ID for this block."}
+                    </Text>
+                    {savedBlockId && (
                       <InlineStack gap="200" blockAlign="center">
                         <Tooltip active content="Copy Your Block ID">
                           <Text
@@ -1676,7 +1899,11 @@ export default function Blocks() {
                             tone="success"
                             as="p"
                           >
-                            <span style={{ fontFamily: "var(--p-font-family-mono)" }}>
+                            <span
+                              style={{
+                                fontFamily: "var(--p-font-family-mono)",
+                              }}
+                            >
                               {savedBlockId}
                             </span>
                           </Text>
@@ -1689,30 +1916,19 @@ export default function Blocks() {
                           onClick={handleCopyId}
                         />
                       </InlineStack>
-                      <Button
-                        variant="primary"
-                        icon={ExternalIcon}
-                        onClick={dismissFirstSaveTooltip}
-                      >
-                        Open Checkout Editor
-                      </Button>
-                    </BlockStack>
-                  </Card>
-                ) : (
-                  <Card>
-                    <BlockStack gap="300">
-                      <Text variant="headingSm" as="h3">
-                        Block Details
-                      </Text>
-                      <Text variant="bodyMd" tone="subdued" as="p">
-                        Save your block to get a Block ID. You'll need to paste
-                        this ID into your Checkout Editor to make the block
-                        appear at checkout.
-                      </Text>
-                      <Button disabled>Open Checkout Editor</Button>
-                    </BlockStack>
-                  </Card>
-                )}
+                    )}
+                    <Button
+                      variant={savedBlockId ? "primary" : undefined}
+                      disabled={!savedBlockId}
+                      icon={savedBlockId ? ExternalIcon : undefined}
+                      onClick={
+                        savedBlockId ? dismissFirstSaveTooltip : undefined
+                      }
+                    >
+                      Open Checkout Editor
+                    </Button>
+                  </BlockStack>
+                </Card>
 
                 {/* Block Styles */}
                 <Card>
@@ -1763,6 +1979,11 @@ export default function Blocks() {
           open={addBlockModalOpen}
           onClose={() => setAddBlockModalOpen(false)}
           onAdd={(block) => setAddedBlocks((prev) => [...prev, block])}
+        />
+
+        <BlockEditModal
+          block={editingBlock}
+          onClose={() => setEditingBlock(null)}
         />
 
         {saveToastActive && (
