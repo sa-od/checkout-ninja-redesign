@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -10,7 +10,6 @@ import {
   Card,
   Button,
   Text,
-  Tabs,
   EmptyState,
   InlineGrid,
   Divider,
@@ -52,26 +51,6 @@ const TEMPLATES = [
   },
 ];
 
-const BLOCKS_TAB = [
-  { id: "1", name: "Free Shipping Bar", image: "/Blocks/block1.png" },
-  { id: "2", name: "Countdown Timer", image: "/Blocks/block2.png" },
-  { id: "3", name: "Discount Banner", image: "/Blocks/block3.png" },
-  { id: "4", name: "Text Field", image: "/Blocks/block4.png" },
-  { id: "5", name: "Dropdown Select", image: "/Blocks/block5.png" },
-  { id: "6", name: "Date Picker", image: "/Blocks/block6.png" },
-];
-
-const EXAMPLES = [
-  { id: "1", name: "Feetly", image: "/Example/example1.png" },
-  { id: "2", name: "Nuvita", image: "/Example/example2.png" },
-];
-
-const TABS = [
-  { id: "templates", content: "Templates" },
-  { id: "blocks", content: "Blocks" },
-  { id: "examples", content: "Examples" },
-];
-
 const USE_CASES = [
   {
     id: "1",
@@ -94,12 +73,10 @@ const USE_CASES = [
 ];
 
 export default function Index() {
-  const [selectedTab, setSelectedTab] = useState(0);
   const [activeCaseStudyId, setActiveCaseStudyId] = useState<string | null>(
     null,
   );
 
-  const handleTabChange = useCallback((tab: number) => setSelectedTab(tab), []);
   const activeCaseStudy =
     USE_CASES.find((uc) => uc.id === activeCaseStudyId) ?? null;
 
@@ -150,154 +127,75 @@ export default function Index() {
           </EmptyState>
         </Card>
 
-        {/* ── Stay Updated ── */}
-        <Card padding="0">
-          <Tabs tabs={TABS} selected={selectedTab} onSelect={handleTabChange}>
-            <Box padding="400">
-              <BlockStack gap="400">
-                {selectedTab === 0 && (
-                  <>
-                    <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
-                      {TEMPLATES.map((item) => (
-                        <div
-                          key={item.id}
-                          style={{
-                            border: "1px solid var(--p-color-border)",
-                            borderRadius: "var(--p-border-radius-300)",
-                            overflow: "hidden",
-                            background: "var(--p-color-bg-surface)",
-                            display: "flex",
-                            flexDirection: "column",
-                            height: "100%",
-                          }}
-                        >
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            style={{
-                              width: "100%",
-                              height: "180px",
-                              display: "block",
-                              objectFit: "cover",
-                            }}
-                          />
-                          <div
-                            style={{
-                              flex: 1,
-                              display: "flex",
-                              flexDirection: "column",
-                              justifyContent: "space-between",
-                              padding: "var(--p-space-400)",
-                              borderTop: "1px solid var(--p-color-border)",
-                              gap: "var(--p-space-300)",
-                            }}
-                          >
-                            <Text variant="headingMd" as="h3">
-                              {item.name}
-                            </Text>
-                            <Button variant="primary">Use Template</Button>
-                          </div>
-                        </div>
-                      ))}
-                    </InlineGrid>
-                    <InlineStack align="end">
-                      <Button variant="secondary" size="slim">
-                        View all Templates
-                      </Button>
-                    </InlineStack>
-                  </>
-                )}
-
-                {selectedTab === 1 && (
-                  <>
-                    <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
-                      {BLOCKS_TAB.map((item) => (
-                        <div
-                          key={item.id}
-                          style={{
-                            border: "1px solid var(--p-color-border)",
-                            borderRadius: "var(--p-border-radius-300)",
-                            overflow: "hidden",
-                            background: "var(--p-color-bg-surface)",
-                            display: "flex",
-                            flexDirection: "column",
-                            height: "100%",
-                          }}
-                        >
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            style={{
-                              width: "100%",
-                              height: "180px",
-                              display: "block",
-                              objectFit: "cover",
-                            }}
-                          />
-                          <div
-                            style={{
-                              flex: 1,
-                              display: "flex",
-                              flexDirection: "column",
-                              justifyContent: "space-between",
-                              padding: "var(--p-space-400)",
-                              borderTop: "1px solid var(--p-color-border)",
-                              gap: "var(--p-space-300)",
-                            }}
-                          >
-                            <Text variant="headingMd" as="h3">
-                              {item.name}
-                            </Text>
-                            <Button variant="primary">Add Block</Button>
-                          </div>
-                        </div>
-                      ))}
-                    </InlineGrid>
-                    <InlineStack align="end">
-                      <Button variant="secondary" size="slim">
-                        View all Blocks
-                      </Button>
-                    </InlineStack>
-                  </>
-                )}
-
-                {selectedTab === 2 && (
-                  <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
-                    {EXAMPLES.map((item) => (
-                      <div
-                        key={item.id}
-                        style={{
-                          border: "1px solid var(--p-color-border)",
-                          borderRadius: "var(--p-border-radius-300)",
-                          overflow: "hidden",
-                          background: "var(--p-color-bg-surface)",
-                        }}
-                      >
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          style={{
-                            width: "100%",
-                            display: "block",
-                            objectFit: "cover",
-                          }}
-                        />
-                        <Box
-                          padding="400"
-                          borderColor="border"
-                          borderBlockStartWidth="025"
-                        >
-                          <Text variant="headingMd" as="h3">
-                            {item.name}
-                          </Text>
-                        </Box>
-                      </div>
-                    ))}
-                  </InlineGrid>
-                )}
-              </BlockStack>
-            </Box>
-          </Tabs>
+        {/* ── Templates carousel ── */}
+        <Card>
+          <BlockStack gap="400">
+            <InlineStack align="space-between" blockAlign="center">
+              <Text variant="headingMd" as="h2">
+                Start with a template
+              </Text>
+            </InlineStack>
+            <div
+              style={{
+                display: "flex",
+                gap: "var(--p-space-400)",
+                overflowX: "auto",
+                paddingBottom: "var(--p-space-200)",
+                scrollSnapType: "x mandatory",
+              }}
+            >
+              {TEMPLATES.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    minWidth: "220px",
+                    flex: "0 0 auto",
+                    border: "1px solid var(--p-color-border)",
+                    borderRadius: "var(--p-border-radius-300)",
+                    overflow: "hidden",
+                    background: "var(--p-color-bg-surface)",
+                    display: "flex",
+                    flexDirection: "column",
+                    scrollSnapAlign: "start",
+                  }}
+                >
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    style={{
+                      width: "100%",
+                      height: "150px",
+                      display: "block",
+                      objectFit: "cover",
+                    }}
+                  />
+                  <div
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      padding: "var(--p-space-400)",
+                      borderTop: "1px solid var(--p-color-border)",
+                      gap: "var(--p-space-300)",
+                    }}
+                  >
+                    <Text variant="headingSm" as="h3">
+                      {item.name}
+                    </Text>
+                    <Button variant="primary" size="slim">
+                      Use Template
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <InlineStack align="end">
+              <Button variant="secondary" size="slim">
+                View all Templates
+              </Button>
+            </InlineStack>
+          </BlockStack>
         </Card>
 
         {/* ── Live examples ── */}
