@@ -1252,6 +1252,27 @@ export default function Blocks() {
     if (searchParams.get("browse") === "1") {
       setTemplateModalOpen(true);
       setSearchParams({}, { replace: true });
+      return;
+    }
+
+    const templateId = searchParams.get("template");
+    const templateName = searchParams.get("name");
+    const templateCategory = searchParams.get("category");
+
+    if (templateId && templateName && templateCategory) {
+      const name = decodeURIComponent(templateName);
+      const category = decodeURIComponent(templateCategory);
+      setBlockName(name);
+      setAddedBlocks([
+        {
+          instanceId: Date.now(),
+          id: Number(templateId),
+          name,
+          category,
+          active: true,
+        },
+      ]);
+      setSearchParams({}, { replace: true });
     }
   }, []);
 

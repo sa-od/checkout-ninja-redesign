@@ -34,24 +34,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 const TEMPLATES = [
-  { id: "1", name: "Available Coupons", image: "/Templates/template1.png" },
-  {
-    id: "2",
-    name: "Free Shipping Progress Bar",
-    image: "/Templates/template2.png",
-  },
-  { id: "3", name: "Checkout Upsell", image: "/Templates/template3.png" },
-  { id: "4", name: "Gift Option Toggle", image: "/Templates/template4.png" },
-  {
-    id: "5",
-    name: "Add a Note to This Gift",
-    image: "/Templates/template5.png",
-  },
-  {
-    id: "6",
-    name: "Customs Duties & Tax Guarantee Notice",
-    image: "/Templates/template6.png",
-  },
+  { id: "1", name: "Available Coupons", category: "upsell", image: "/Templates/template1.png" },
+  { id: "2", name: "Free Shipping Progress Bar", category: "upsell", image: "/Templates/template2.png" },
+  { id: "3", name: "Checkout Upsell", category: "upsell", image: "/Templates/template3.png" },
+  { id: "4", name: "Gift Option Toggle", category: "personalisation", image: "/Templates/template4.png" },
+  { id: "5", name: "Add a Note to This Gift", category: "personalisation", image: "/Templates/template5.png" },
+  { id: "6", name: "Customs Duties & Tax Guarantee Notice", category: "checkout-notices", image: "/Templates/template6.png" },
 ];
 
 const USE_CASES = [
@@ -263,7 +251,15 @@ export default function Index() {
                       <Text variant="headingSm" as="h3">
                         {item.name}
                       </Text>
-                      <Button variant="primary" size="slim">
+                      <Button
+                        variant="primary"
+                        size="slim"
+                        onClick={() =>
+                          navigate(
+                            `/app/blocks?template=${item.id}&name=${encodeURIComponent(item.name)}&category=${item.category}`,
+                          )
+                        }
+                      >
                         Use Template
                       </Button>
                     </div>
