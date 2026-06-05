@@ -24,6 +24,8 @@ import {
   DropZone,
   ChoiceList,
   Link,
+  Frame,
+  Toast,
 } from "@shopify/polaris";
 import type { BadgeProps } from "@shopify/polaris";
 import {
@@ -795,6 +797,7 @@ export default function Blocks() {
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [addBlockModalOpen, setAddBlockModalOpen] = useState(false);
+  const [exportToastActive, setExportToastActive] = useState(false);
 
   const handleStatusChange = useCallback(
     (value: string) => setStatus(value),
@@ -806,29 +809,30 @@ export default function Blocks() {
   );
 
   return (
-    <Page
-      title="New Checkout Block"
-      backAction={{ content: "Blocks", url: "/app" }}
-      secondaryActions={[
-        {
-          content: "Browse Templates",
-          icon: ThemeTemplateIcon,
-          onAction: () => setTemplateModalOpen(true),
-        },
-      ]}
-      actionGroups={[
-        {
-          title: "More actions",
-          actions: [
-            {
-              content: "Import",
-              icon: ImportIcon,
-              onAction: () => setImportModalOpen(true),
-            },
-          ],
-        },
-      ]}
-    >
+    <Frame>
+      <Page
+        title="New Checkout Block"
+        backAction={{ content: "Blocks", url: "/app" }}
+        secondaryActions={[
+          {
+            content: "Browse Templates",
+            icon: ThemeTemplateIcon,
+            onAction: () => setTemplateModalOpen(true),
+          },
+        ]}
+        actionGroups={[
+          {
+            title: "More actions",
+            actions: [
+              {
+                content: "Import",
+                icon: ImportIcon,
+                onAction: () => setImportModalOpen(true),
+              },
+            ],
+          },
+        ]}
+      >
       <BlockStack gap="500">
         {/* ── Start with a Template (full-width) ── */}
         <Card>
@@ -928,12 +932,18 @@ export default function Blocks() {
                             {
                               content: "Import blocks",
                               icon: ImportIcon,
-                              onAction: () => setMenuOpen(false),
+                              onAction: () => {
+                                setMenuOpen(false);
+                                setImportModalOpen(true);
+                              },
                             },
                             {
                               content: "Export blocks",
                               icon: ExportIcon,
-                              onAction: () => setMenuOpen(false),
+                              onAction: () => {
+                                setMenuOpen(false);
+                                setExportToastActive(true);
+                              },
                             },
                           ]}
                         />
@@ -1043,7 +1053,15 @@ export default function Blocks() {
         open={addBlockModalOpen}
         onClose={() => setAddBlockModalOpen(false)}
       />
+
+      {exportToastActive && (
+        <Toast
+          content="Downloading..."
+          onDismiss={() => setExportToastActive(false)}
+        />
+      )}
     </Page>
+    </Frame>
   );
 }
 

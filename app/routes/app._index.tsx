@@ -14,12 +14,22 @@ import {
   EmptyState,
   InlineGrid,
   Divider,
+  Icon,
+  MediaCard,
+  Modal,
 } from "@shopify/polaris";
+import {
+  ThemeTemplateIcon,
+  EditIcon,
+  ExportIcon,
+} from "@shopify/polaris-icons";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
   return null;
 };
+
+// ── Data ──────────────────────────────────────────────────────────────────────
 
 const TEMPLATES = [
   { id: "1", name: "Available Coupons", image: "/Templates/template1.png" },
@@ -37,7 +47,7 @@ const TEMPLATES = [
   },
   {
     id: "6",
-    name: "Customs Duties & Tax Notice",
+    name: "Customs Duties & Tax Guarantee Notice",
     image: "/Templates/template6.png",
   },
 ];
@@ -56,21 +66,42 @@ const EXAMPLES = [
   { id: "2", name: "Nuvita", image: "/Example/example2.png" },
 ];
 
-const USE_CASES = [
-  { id: "1", brand: "Feetly", image: "/Example/example1.png" },
-  { id: "2", brand: "Nuvita", image: "/Example/example2.png" },
-];
-
 const TABS = [
   { id: "templates", content: "Templates" },
   { id: "blocks", content: "Blocks" },
   { id: "examples", content: "Examples" },
 ];
 
+const USE_CASES = [
+  {
+    id: "1",
+    brand: "Feetly",
+    description:
+      "How Feetly increased average order value using upsell blocks at checkout",
+    image: "/Example/example1.png",
+    caseStudy:
+      "Feetly integrated Checkout Ninja's upsell blocks to recommend complementary products at the final step of checkout. By showing targeted add-ons based on cart contents, they saw a 23% lift in average order value within the first 30 days — without any code changes.",
+  },
+  {
+    id: "2",
+    brand: "Nuvita",
+    description:
+      "How Nuvita builds customer trust with social proof and payment badges",
+    image: "/Example/example2.png",
+    caseStudy:
+      "Nuvita used Checkout Ninja to add trust badges, accepted payment icons, and a Google Review testimonial directly to their checkout page. The result was a 15% reduction in cart abandonment, as customers felt more confident completing their purchase.",
+  },
+];
+
 export default function Index() {
   const [selectedTab, setSelectedTab] = useState(0);
+  const [activeCaseStudyId, setActiveCaseStudyId] = useState<string | null>(
+    null,
+  );
 
   const handleTabChange = useCallback((tab: number) => setSelectedTab(tab), []);
+  const activeCaseStudy =
+    USE_CASES.find((uc) => uc.id === activeCaseStudyId) ?? null;
 
   return (
     <Page
@@ -83,140 +114,61 @@ export default function Index() {
           <EmptyState
             heading="No checkout blocks yet"
             action={{ content: "+ Create block", onAction: () => {} }}
-            secondaryAction={{
-              content: "Browse templates",
-              onAction: () => {},
-            }}
+            // secondaryAction={{
+            //   content: "Browse templates",
+            //   onAction: () => {},
+            // }}
             image="/empty-state.png"
+            imageContained
           >
-            <p>
-              Add blocks to your checkout to show upsells, trust badges, gift
-              messages, and more — without touching code.
-            </p>
+            <InlineGrid columns={3} gap="400">
+              {[
+                { icon: ThemeTemplateIcon, label: "Pick a template" },
+                { icon: EditIcon, label: "Configure & preview" },
+                { icon: ExportIcon, label: "Publish to checkout" },
+              ].map(({ icon, label }, i) => (
+                <Box
+                  key={i}
+                  background="bg-surface-secondary"
+                  borderRadius="200"
+                  padding="300"
+                >
+                  <BlockStack gap="150" inlineAlign="center">
+                    <Icon source={icon} tone="base" />
+                    <Text
+                      variant="bodySm"
+                      fontWeight="medium"
+                      as="p"
+                      alignment="center"
+                    >
+                      {label}
+                    </Text>
+                  </BlockStack>
+                </Box>
+              ))}
+            </InlineGrid>
           </EmptyState>
         </Card>
 
         {/* ── Stay Updated ── */}
-        <BlockStack gap="300">
-          <Text variant="headingMd" as="h2">
-            Stay Updated
-          </Text>
-          <Card padding="0">
-            <Tabs tabs={TABS} selected={selectedTab} onSelect={handleTabChange}>
-              <Box padding="400">
-                <BlockStack gap="400">
-                  {selectedTab === 0 && (
-                    <>
-                      <InlineGrid columns={3} gap="400">
-                        {TEMPLATES.map((item) => (
-                          <BlockStack key={item.id} gap="0">
-                            <div
-                              style={{
-                                border: "1px solid #e1e3e5",
-                                borderRadius: "8px",
-                                overflow: "hidden",
-                              }}
-                            >
-                              <img
-                                src={item.image}
-                                alt={item.name}
-                                style={{
-                                  height: "60%",
-                                  width: "100%",
-                                  display: "block",
-                                  objectFit: "cover",
-                                }}
-                              />
-                              <Box
-                                padding="300"
-                                borderColor="border"
-                                borderBlockStartWidth="025"
-                              >
-                                <BlockStack gap="200">
-                                  <Text
-                                    variant="bodyMd"
-                                    fontWeight="medium"
-                                    as="p"
-                                  >
-                                    {item.name}
-                                  </Text>
-                                  <Button variant="primary" size="slim">
-                                    Use Template
-                                  </Button>
-                                </BlockStack>
-                              </Box>
-                            </div>
-                          </BlockStack>
-                        ))}
-                      </InlineGrid>
-                      <InlineStack align="end">
-                        <Button variant="secondary" size="slim">
-                          View all Templates
-                        </Button>
-                      </InlineStack>
-                    </>
-                  )}
-
-                  {selectedTab === 1 && (
-                    <>
-                      <InlineGrid columns={3} gap="400">
-                        {BLOCKS_TAB.map((item) => (
-                          <BlockStack key={item.id} gap="0">
-                            <div
-                              style={{
-                                border: "1px solid #e1e3e5",
-                                borderRadius: "8px",
-                                overflow: "hidden",
-                              }}
-                            >
-                              <img
-                                src={item.image}
-                                alt={item.name}
-                                style={{
-                                  width: "100%",
-                                  display: "block",
-                                  objectFit: "cover",
-                                }}
-                              />
-                              <Box
-                                padding="300"
-                                borderColor="border"
-                                borderBlockStartWidth="025"
-                              >
-                                <BlockStack gap="200">
-                                  <Text
-                                    variant="bodyMd"
-                                    fontWeight="medium"
-                                    as="p"
-                                  >
-                                    {item.name}
-                                  </Text>
-                                  <Button variant="primary" size="slim">
-                                    Add Block
-                                  </Button>
-                                </BlockStack>
-                              </Box>
-                            </div>
-                          </BlockStack>
-                        ))}
-                      </InlineGrid>
-                      <InlineStack align="end">
-                        <Button variant="secondary" size="slim">
-                          View all Blocks
-                        </Button>
-                      </InlineStack>
-                    </>
-                  )}
-
-                  {selectedTab === 2 && (
-                    <InlineGrid columns={2} gap="400">
-                      {EXAMPLES.map((item) => (
+        <Card padding="0">
+          <Tabs tabs={TABS} selected={selectedTab} onSelect={handleTabChange}>
+            <Box padding="400">
+              <BlockStack gap="400">
+                {selectedTab === 0 && (
+                  <>
+                    <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
+                      {TEMPLATES.map((item) => (
                         <div
                           key={item.id}
                           style={{
-                            border: "1px solid #e1e3e5",
-                            borderRadius: "8px",
+                            border: "1px solid var(--p-color-border)",
+                            borderRadius: "var(--p-border-radius-300)",
                             overflow: "hidden",
+                            background: "var(--p-color-bg-surface)",
+                            display: "flex",
+                            flexDirection: "column",
+                            height: "100%",
                           }}
                         >
                           <img
@@ -224,70 +176,187 @@ export default function Index() {
                             alt={item.name}
                             style={{
                               width: "100%",
+                              height: "180px",
                               display: "block",
                               objectFit: "cover",
                             }}
                           />
-                          <Box
-                            padding="300"
-                            borderColor="border"
-                            borderBlockStartWidth="025"
+                          <div
+                            style={{
+                              flex: 1,
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "space-between",
+                              padding: "var(--p-space-400)",
+                              borderTop: "1px solid var(--p-color-border)",
+                              gap: "var(--p-space-300)",
+                            }}
                           >
-                            <Text variant="bodyMd" fontWeight="semibold" as="p">
+                            <Text variant="headingMd" as="h3">
                               {item.name}
                             </Text>
-                          </Box>
+                            <Button variant="primary">Use Template</Button>
+                          </div>
                         </div>
                       ))}
                     </InlineGrid>
-                  )}
-                </BlockStack>
-              </Box>
-            </Tabs>
-          </Card>
-        </BlockStack>
+                    <InlineStack align="end">
+                      <Button variant="secondary" size="slim">
+                        View all Templates
+                      </Button>
+                    </InlineStack>
+                  </>
+                )}
 
-        {/* ── Discover use cases ── */}
-        <BlockStack gap="300">
-          <Text variant="headingMd" as="h2">
-            Discover What&apos;s Possible! Here are some real use cases.
+                {selectedTab === 1 && (
+                  <>
+                    <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
+                      {BLOCKS_TAB.map((item) => (
+                        <div
+                          key={item.id}
+                          style={{
+                            border: "1px solid var(--p-color-border)",
+                            borderRadius: "var(--p-border-radius-300)",
+                            overflow: "hidden",
+                            background: "var(--p-color-bg-surface)",
+                            display: "flex",
+                            flexDirection: "column",
+                            height: "100%",
+                          }}
+                        >
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            style={{
+                              width: "100%",
+                              height: "180px",
+                              display: "block",
+                              objectFit: "cover",
+                            }}
+                          />
+                          <div
+                            style={{
+                              flex: 1,
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "space-between",
+                              padding: "var(--p-space-400)",
+                              borderTop: "1px solid var(--p-color-border)",
+                              gap: "var(--p-space-300)",
+                            }}
+                          >
+                            <Text variant="headingMd" as="h3">
+                              {item.name}
+                            </Text>
+                            <Button variant="primary">Add Block</Button>
+                          </div>
+                        </div>
+                      ))}
+                    </InlineGrid>
+                    <InlineStack align="end">
+                      <Button variant="secondary" size="slim">
+                        View all Blocks
+                      </Button>
+                    </InlineStack>
+                  </>
+                )}
+
+                {selectedTab === 2 && (
+                  <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+                    {EXAMPLES.map((item) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          border: "1px solid var(--p-color-border)",
+                          borderRadius: "var(--p-border-radius-300)",
+                          overflow: "hidden",
+                          background: "var(--p-color-bg-surface)",
+                        }}
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          style={{ width: "100%", display: "block", objectFit: "cover" }}
+                        />
+                        <Box padding="400" borderColor="border" borderBlockStartWidth="025">
+                          <Text variant="headingMd" as="h3">{item.name}</Text>
+                        </Box>
+                      </div>
+                    ))}
+                  </InlineGrid>
+                )}
+              </BlockStack>
+            </Box>
+          </Tabs>
+        </Card>
+
+        {/* ── Live examples ── */}
+        <BlockStack gap="200">
+          <Text variant="headingLg" as="h2">
+            Live examples
           </Text>
-
-          <InlineGrid columns={2} gap="400">
-            {USE_CASES.map((uc) => (
-              <div
-                key={uc.id}
-                style={{
-                  border: "1px solid #e1e3e5",
-                  borderRadius: "8px",
-                  overflow: "hidden",
-                }}
-              >
-                <Box
-                  padding="300"
-                  borderColor="border"
-                  borderBlockEndWidth="025"
-                >
-                  <Text variant="bodySm" fontWeight="semibold" as="p">
-                    {uc.brand}
-                  </Text>
-                </Box>
-                <img
-                  src={uc.image}
-                  alt={uc.brand}
-                  style={{
-                    width: "100%",
-                    display: "block",
-                    objectFit: "cover",
-                  }}
-                />
-              </div>
-            ))}
-          </InlineGrid>
+          <Text variant="bodyMd" tone="subdued" as="p">
+            See how merchants use Checkout Ninja to improve their checkout
+          </Text>
         </BlockStack>
+
+        <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+          {USE_CASES.map((uc) => (
+            <MediaCard
+              key={uc.id}
+              title={uc.brand}
+              description={uc.description}
+              primaryAction={{
+                content: "View case study",
+                onAction: () => setActiveCaseStudyId(uc.id),
+              }}
+            >
+              <img
+                src={uc.image}
+                alt={uc.brand}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: "top",
+                  display: "block",
+                }}
+              />
+            </MediaCard>
+          ))}
+        </InlineGrid>
 
         <Divider />
       </BlockStack>
+
+      {activeCaseStudy && (
+        <Modal
+          open={!!activeCaseStudy}
+          onClose={() => setActiveCaseStudyId(null)}
+          title={activeCaseStudy.brand}
+          secondaryActions={[
+            { content: "Close", onAction: () => setActiveCaseStudyId(null) },
+          ]}
+        >
+          <Modal.Section>
+            <BlockStack gap="400">
+              <img
+                src={activeCaseStudy.image}
+                alt={activeCaseStudy.brand}
+                style={{
+                  width: "100%",
+                  display: "block",
+                  borderRadius: "8px",
+                  objectFit: "cover",
+                }}
+              />
+              <Text variant="bodyMd" as="p">
+                {activeCaseStudy.caseStudy}
+              </Text>
+            </BlockStack>
+          </Modal.Section>
+        </Modal>
+      )}
     </Page>
   );
 }
