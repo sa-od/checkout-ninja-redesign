@@ -268,7 +268,11 @@ export default function Index() {
               </div>
             </div>
             <InlineStack align="end">
-              <Button variant="secondary" size="slim">
+              <Button
+                variant="secondary"
+                size="slim"
+                onClick={() => navigate("/app/blocks?browse=1")}
+              >
                 View all Templates
               </Button>
             </InlineStack>
