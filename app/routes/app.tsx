@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
-import { Outlet, useLoaderData, useRouteError } from "react-router";
+import { Outlet, useLoaderData, useRouteError, useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
+import { NavMenu } from "@shopify/app-bridge-react";
 import { AppProvider as PolarisProvider } from "@shopify/polaris";
 import enTranslations from "@shopify/polaris/locales/en.json";
 
@@ -16,20 +18,39 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function App() {
   const { apiKey } = useLoaderData<typeof loader>();
+  const navigate = useNavigate();
+
+  // NavMenu fires "shopify:navigate" events, but event.target loses the href
+  // through shadow DOM re-targeting. composedPath() pierces the shadow root
+  // to find the actual <a> element so React Router gets the correct path.
+  useEffect(() => {
+    const handleNavigate = (event: Event) => {
+      const path = event.composedPath();
+      const anchor = path.find(
+        (el) => (el as Element).tagName?.toLowerCase() === "a",
+      ) as HTMLAnchorElement | undefined;
+      const href =
+        anchor?.getAttribute("href") ??
+        (event.target as Element)?.getAttribute("href");
+      if (href) navigate(href);
+    };
+    document.addEventListener("shopify:navigate", handleNavigate);
+    return () => document.removeEventListener("shopify:navigate", handleNavigate);
+  }, [navigate]);
 
   return (
     <AppProvider embedded apiKey={apiKey}>
       <PolarisProvider i18n={enTranslations}>
-        <s-app-nav home-href="/app">
-          <s-link href="/app/blocks">Blocks</s-link>
-        </s-app-nav>
+        <NavMenu>
+          <a href="/app" rel="home">Home</a>
+          <a href="/app/blocks">Blocks</a>
+        </NavMenu>
         <Outlet />
       </PolarisProvider>
     </AppProvider>
   );
 }
 
-// Shopify needs React Router to catch some thrown responses, so that their headers are included in the response.
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
